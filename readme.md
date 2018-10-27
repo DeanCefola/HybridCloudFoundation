@@ -1,21 +1,22 @@
-﻿Overview for Azure Hybrid Cloud Foundation Templates:
+﻿**Overview for Azure Hybrid Cloud Foundation Templates:**
 
-This Master template creates the following resources:
-	2 Virtual Network
-	1 monitoring storage account
-	1 storage account for NVA
-	2 NVAs in HA mode 
-	2 Active Directory Domain Controllers
-	2 DFS servers in HA
-	RDSFarm
-		2 RDS Connection Brokers
-		1 Azure SQL server instance 
-			1 Azure SQL Database
-		2 RDS Web Access Servers
-		4 RDS Session Hosts
-	Application
-		After the HCF is in place install your application on the spoke virtual network
-		If more appication space is needed either add address spaces to the spoke vnet or create a new vnet spoke and peer to hub
+**This Master template creates the following resources:**
+============================
+	-2 Virtual Network
+	-1 monitoring storage account
+	-1 storage account for NVA
+	-2 NVAs in HA mode 
+	-2 Active Directory Domain Controllers
+	-2 DFS servers in HA
+	-RDSFarm
+		-2 RDS Connection Brokers
+		-1 Azure SQL server instance 
+			-1 Azure SQL Database
+		-2 RDS Web Access Servers
+		-4 RDS Session Hosts
+	-Application
+		-After the HCF is in place install your application on the spoke virtual network
+		-If more appication space is needed either add address spaces to the spoke vnet or create a new vnet spoke and peer to hub
 
 Deployment Parameters: 
 	Client_Prefix:  This is a unique identifier that will be used as a prefix for resources that need globally unique IDs.  
