@@ -1,0 +1,64 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Admin_Password": {
+      "type": "securestring"
+    },
+    "Admin_UserName": {
+      "type": "string"
+    },
+    "Client_Prefix": {
+      "type": "string"
+    },
+    "DSC_domain_3_build_bdc_url": {
+      "type": "string"
+    },
+    "DomainFQDN": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    }
+  },
+  "variables": {    
+    "BDCName": "[concat(parameters('Client_Prefix'), 'DC01')]"
+  },
+  "resources": [
+    {
+      "name": "[concat(variables('BDCName'), '/PrepareBDC')]",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "location": "[parameters('location')]",
+      "apiVersion": "2016-03-30",
+      "tags": {
+        "displayName": "DomainServices"
+      },
+      "properties": {
+        "publisher": "Microsoft.Powershell",
+        "type": "DSC",
+        "typeHandlerVersion": "2.21",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "modulesUrl": "[parameters('DSC_domain_3_build_bdc_url')]",
+          "wmfVersion": "4.0",
+          "configurationFunction": "ConfigureADBDC.ps1\\ConfigureADBDC",
+          "properties": {
+            "domainName": "[parameters('DomainFQDN')]",
+            "adminCreds": {
+              "userName": "[parameters('Admin_UserName')]",
+              "password": "PrivateSettingsRef:adminPassword"
+            }
+          }
+        },
+        "protectedSettings": {
+          "items": {
+            "adminPassword": "[parameters('Admin_Password')]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+
+  }
+}

@@ -1,0 +1,1013 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Auto-generated container in staging storage account to receive post-build staging folder upload"
+      }
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Auto-generated token to access _artifactsLocation"
+      }
+    },
+    "Client_Prefix": {
+      "type": "string",
+      "defaultValue": "",
+      "maxLength": 10,
+      "minLength": 3,
+      "metadata": {
+        "description": "Enter a prefix for all resources to be globally unique to your environemnt"
+      }
+    },
+    "Admin_Password": {
+      "type": "securestring"
+    },
+    "Admin_UserName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "standard local admin account"
+      }
+    },
+    "Auth_authenticationType": {
+      "type": "string",
+      "defaultValue": "",
+      "allowedValues": [
+        "password",
+        "sshPublicKey"
+      ],
+      "metadata": {
+        "description": "Authentication Type to chose for the Virtual Machines"
+      }
+    },
+    "Auth_sshPublicKey": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "SSH Key for the virtual machines"
+      }
+    },
+    "backupPolicyName": {
+      "type": "string",
+      "defaultValue": "DefaultPolicy",
+      "allowedValues": [
+        "SOX",
+        "HIPPA",
+        "PCI",
+        "DefaultPolicy"
+      ]
+    },
+    "DomainExtension": {
+      "type": "string",
+      "allowedValues": [
+        ".com",
+        ".net",
+        ".org",
+        ".edu"
+      ],
+      "metadata": {
+        "description": "Combines Domain NetBIOS name with your selected extension i.e.  'Contoso.com'"
+      }
+    },
+    "DomainName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "NetBios Domain Name"
+      }
+    },
+    "Hybrid_Use_Benifit": {
+      "type": "string",
+      "defaultValue": "Windows_Server",
+      "allowedValues": [
+        "",
+        "Windows_Server"
+      ],
+      "metadata": {
+        "description": "Use Existing Windows Server Licenses with Software Assurance"
+      }
+    },
+    "IPAddress_Space": {
+      "type": "string",
+      "defaultValue": "10.0",
+      "metadata": {
+        "description": "Enter the CIRD for this deployment (10.0.x.x leave last 2 octets blank)"
+      },
+      "minLength": 4,
+      "maxLength": 12
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "eastus2",
+      "allowedValues": [
+        "centralus",
+        "eastus",
+        "eastus2",
+        "northcentralus",
+        "southcentralus",
+        "westcentralus",
+        "westus",
+        "westus2"
+      ],
+      "metadata": {
+        "description": "List of allowed deployment regions in Azure"
+      }
+    },
+    "location_DR": {
+      "type": "string",
+      "defaultValue": "westus2",
+      "allowedValues": [
+        "centralus",
+        "eastus",
+        "eastus2",
+        "northcentralus",
+        "southcentralus",
+        "westcentralus",
+        "westus",
+        "westus2"
+      ],
+      "metadata": {
+        "description": "List of allowed deployment regions in Azure"
+      }
+    },
+    "SQLAdmin_Password": {
+      "type": "securestring"
+    },
+    "SQLAdmin_UserName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "SQL Admin account"
+      }
+    },
+    "Tags_Application": {
+      "type": "string",
+      "metadata": {
+        "description": "Application for target resource"
+      }
+    },
+    "Tags_CostCenter": {
+      "type": "string",
+      "metadata": {
+        "description": "Cost Center of target resource"
+      }
+    },
+    "Tags_Department": {
+      "type": "string",
+      "metadata": {
+        "description": "department of target resource"
+      }
+    },
+    "Tags_Environment": {
+      "type": "string",
+      "allowedValues": [
+        "prd",
+        "dev",
+        "tst",
+        "qa"
+      ],
+      "metadata": {
+        "description": "environment of target resource"
+      }
+    },
+    "1_Deploy_Backup_Vault": {
+      "type": "bool",
+      "allowedValues": [
+        true,
+        false
+      ]
+    },
+    "1_Deploy_KeyVault": {
+      "type": "bool",
+      "allowedValues": [
+        true,
+        false
+      ]
+    },
+    "1_Deploy_Site_Recovery": {
+      "type": "bool",
+      "allowedValues": [
+        true,
+        false
+      ]
+    },
+    "1_Deploy_Virtual_Network": {
+      "type": "bool",
+      "allowedValues": [
+        true,
+        false
+      ]
+    },
+    "2_Deploy_Storage": {
+      "type": "bool",
+      "allowedValues": [
+        true,
+        false
+      ]
+    },
+    "2_Deploy_NVA_Cisco": {
+      "type": "bool",
+      "allowedValues": [
+        true,
+        false
+      ]
+    },
+    "2_Deploy_NVA_PaloAlto": {
+      "type": "bool",
+      "allowedValues": [
+        true,
+        false
+      ]
+    },
+    "3_Deploy_ActiveDirectory": {
+      "type": "bool",
+      "allowedValues": [
+        true,
+        false
+      ]
+    },
+    "4_Deploy_DFS_Farm": {
+      "type": "bool",
+      "allowedValues": [
+        true,
+        false
+      ]
+    },
+    "5_Deploy_RDS_Farm": {
+      "type": "bool",
+      "allowedValues": [
+        true,
+        false
+      ]
+    },
+    "6_Deploy_Tempalte_WORKLOAD_placeholder": {
+      "type": "bool",
+      "allowedValues": [
+        true,
+        false
+      ]
+    },
+    "7_Deploy_ExpressRoute": {
+      "type": "bool",
+      "allowedValues": [
+        true,
+        false
+      ]
+    },
+    "7_Deploy_VPN": {
+      "type": "bool",
+      "allowedValues": [
+        true,
+        false
+      ]
+    }
+  },
+  "variables": {
+    "DomainFQDN": "[concat(parameters('domainName'), parameters('DomainExtension'))]",
+    "Params": "[concat(parameters('Client_Prefix'), parameters('Tags_Application'), parameters('Tags_Environment'))]",
+    "ServerParams": "[concat(parameters('Client_Prefix'), parameters('Tags_Environment'))]",
+    "Source": "[concat('/subscriptions/', subscription().subscriptionId , '/resourceGroups/', resourceGroup().name, '/providers/')]",
+    "slash": "\\",
+    "JoinUser": "[concat(parameters('DomainName'), variables('slash'), parameters('Admin_UserName'))]",
+    "NVA_Storage_url": "[concat('http://', parameters('Client_Prefix') ,'nva01.blob.core.windows.net')]",
+    "Monitor_Storage_url": "[concat('http://', parameters('Client_Prefix') ,'monitor01.blob.core.windows.net')]",    
+    "Templates": {
+      "core_backup_vault": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/core/core_backup_vault.json', parameters('_artifactsLocationSasToken'))]"
+      },
+      "core_keyvault": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/core/core_keyvault.json', parameters('_artifactsLocationSasToken'))]"
+      },
+      "core_vnet_build": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/core/core_vnet_build.json', parameters('_artifactsLocationSasToken'))]"
+      },
+      "core_vnet_UpdateDNS": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/core/core_vnet_updatedns.json', parameters('_artifactsLocationSasToken'))]"
+      },
+      "core_vnet_expressroute": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/core/core_vnet_expressroute.json', parameters('_artifactsLocationSasToken'))]"
+      },
+      "core_vnet_vpn_gateway": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/core/core_vnet_vpn_gateway.json', parameters('_artifactsLocationSasToken'))]"
+      },
+      "core_storage": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/core/core_storage.json', parameters('_artifactsLocationSasToken'))]"
+      },
+      "nva_cisco": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/nva/nva_cisco.json', parameters('_artifactsLocationSasToken'))]"
+      },
+      "nva_paloalto": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/nva/nva_paloalto.json', parameters('_artifactsLocationSasToken'))]"
+      },
+      "domain_1_build": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/domain/domain_1_build.json', parameters('_artifactsLocationSasToken'))]"
+      },
+      "domain_2_config_bdc": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/domain/domain_2_config_bdc.json', parameters('_artifactsLocationSasToken'))]"
+      },
+      "shared_DFS_build": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/sharedservices/dfs_build.json', parameters('_artifactsLocationSasToken'))]"
+      },
+      "shared_RDS_buildfarm": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/sharedservices/rds_build.json', parameters('_artifactsLocationSasToken'))]"
+      },
+      "WORKLOAD_placeholder": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/workload.json', parameters('_artifactsLocationSasToken'))]"
+      }
+    },
+    "DSC": {
+      "domain_1_build_pdc": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/dsc/domain_1_build_pdc.zip', parameters('_artifactsLocationSasToken'))]"
+      },
+      "domain_2_prepare_bdc": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/dsc/domain_2_prepare_bdc.zip', parameters('_artifactsLocationSasToken'))]"
+      },
+      "domain_3_build_bdc": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/dsc/domain_3_build_bdc.zip', parameters('_artifactsLocationSasToken'))]"
+      },
+      "rds_1_configuration": {
+        "Link": "[concat(parameters('_artifactsLocation'), '/dsc/rds_1_configuration.zip', parameters('_artifactsLocationSasToken'))]"
+      }
+    },
+    "Scripts": {
+      "DFS_build_ha": {
+        "Link": "[concat('https://', parameters('Client_Prefix'),'staging01.blob.core.windows.net/scripts/InstallDFS.ps1')]"
+      },
+      "rds_1_connectionbroker_ha": {
+        "Link": "[concat('https://', parameters('Client_Prefix'),'staging01.blob.core.windows.net/scripts/rds_1_connectionbroker_ha.ps1')]"
+      },
+      "rds_2_web_gw_postconfig": {
+        "Link": "[concat('https://', parameters('Client_Prefix'),'staging01.blob.core.windows.net/scripts/rds_2_web_gw_postconfig.ps1')]"
+      },
+      "azure_disk_encryption": {
+        "Link": "[concat('https://', parameters('Client_Prefix'),'staging01.blob.core.windows.net/scripts/azure_disk_encryption.ps1')]"
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "1_Deploy_Backup_Vault",
+      "apiVersion": "2017-08-01",
+      "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-security')]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('Templates')['core_backup_vault'].Link]"
+        },
+        "parameters": {
+          "Client_Prefix": {
+            "value": "[parameters('Client_Prefix')]"
+          },
+          "Location": {
+            "value": "[parameters('location')]"
+          },
+          "Tags_Application": {
+            "Value": "[parameters('Tags_Application')]"
+          },
+          "Tags_CostCenter": {
+            "value": "[parameters('Tags_CostCenter')]"
+          },
+          "Tags_Department": {
+            "value": "[parameters('Tags_Department')]"
+          },
+          "Tags_Environment": {
+            "value": "[parameters('Tags_Environment')]"
+          },
+          "vaultName": {
+            "value": "[concat(parameters('Client_Prefix'), '-BackupVault')]"
+          }
+        }
+      },
+      "condition": "[parameters('1_Deploy_Backup_Vault')]",
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "1_Deploy_Key_Vault",
+      "apiVersion": "2017-08-01",
+      "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-security')]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('Templates')['core_keyvault'].Link]"
+        },
+        "parameters": {
+          "Client_Prefix": {
+            "value": "[parameters('Client_Prefix')]"
+          },
+          "Location": {
+            "value": "[parameters('location')]"
+          },
+          "Tags_Application": {
+            "Value": "[parameters('Tags_Application')]"
+          },
+          "Tags_CostCenter": {
+            "value": "[parameters('Tags_CostCenter')]"
+          },
+          "Tags_Department": {
+            "value": "[parameters('Tags_Department')]"
+          },
+          "Tags_Environment": {
+            "value": "[parameters('Tags_Environment')]"
+          }
+        }
+      },
+      "condition": "[parameters('1_Deploy_KeyVault')]",
+      "dependsOn": [
+
+      ]
+    },
+    /*
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "1_Deploy_Site_Recovery",
+      "apiVersion": "2017-08-01",
+      "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-DisasterRecovery')]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('Template_core_site_recovery_url')]"
+        },
+        "parameters": {
+          "Client_Prefix": {
+            "value": "[parameters('Client_Prefix')]"
+          },
+          "Location": {
+            "value": "[parameters('location_DR')]"
+          },
+          "Tags_Application": {
+            "Value": "[parameters('Tags_Application')]"
+          },
+          "Tags_CostCenter": {
+            "value": "[parameters('Tags_CostCenter')]"
+          },
+          "Tags_Department": {
+            "value": "[parameters('Tags_Department')]"
+          },
+          "Tags_Environment": {
+            "value": "[parameters('Tags_Environment')]"
+          }
+        }
+      },      
+      "condition": "[parameters('1_Deploy_Site_Recovery')]",
+      "dependsOn": [
+
+      ]
+    },
+    */
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "1_Deploy_vNET_Template",
+      "apiVersion": "2017-08-01",
+      "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-vnets')]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('Templates')['core_vnet_build'].Link]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "Client_Prefix": {
+            "value": "[parameters('Client_Prefix')]"
+          },
+          "IPAddress_Space": {
+            "value": "[parameters('IPAddress_Space')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "Tags_Application": {
+            "Value": "[parameters('Tags_Application')]"
+          },
+          "Tags_CostCenter": {
+            "value": "[parameters('Tags_CostCenter')]"
+          },
+          "Tags_Department": {
+            "value": "[parameters('Tags_Department')]"
+          },
+          "Tags_Environment": {
+            "value": "[parameters('Tags_Environment')]"
+          }
+        }
+      },
+      "condition": "[parameters('1_Deploy_Virtual_Network')]",
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "2_Deploy_Storage_Template",
+      "apiVersion": "2017-08-01",
+      "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-security')]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('Templates')['core_storage'].Link]"
+        },
+        "parameters": {
+          "Client_Prefix": {
+            "value": "[parameters('Client_Prefix')]"
+          },
+          "Location": {
+            "value": "[parameters('location')]"
+          },
+          "Tags_Application": {
+            "Value": "[parameters('Tags_Application')]"
+          },
+          "Tags_CostCenter": {
+            "value": "[parameters('Tags_CostCenter')]"
+          },
+          "Tags_Department": {
+            "value": "[parameters('Tags_Department')]"
+          },
+          "Tags_Environment": {
+            "value": "[parameters('Tags_Environment')]"
+          },
+          "vNETRef_Hub": {
+            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Hub.value]"
+          },
+          "vNETRef_Spoke": {
+            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Spoke.value]"
+          }
+        }
+      },
+      "condition": "[parameters('2_Deploy_Storage')]",
+      "dependsOn": [
+        "1_Deploy_vNET_Template"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "2_Deploy_NVA_Cisco_Template",
+      "apiVersion": "2017-08-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('Templates')['nva_cisco'].Link]"
+        },
+        "parameters": {
+          "Admin_Password": {
+            "value": "[parameters('Admin_Password')]"
+          },
+          "Admin_UserName": {
+            "value": "[parameters('Admin_UserName')]"
+          },
+          "Auth_authenticationType": {
+            "value": "[parameters('Auth_authenticationType')]"
+          },
+          "Auth_sshPublicKey": {
+            "value": "[parameters('Auth_sshPublicKey')]"
+          },
+          "Client_Prefix": {
+            "value": "[parameters('Client_Prefix')]"
+          },
+          "DomainName": {
+            "value": "[parameters('DomainName')]"
+          },
+          "IPAddress_Space": {
+            "value": "[parameters('IPAddress_Space')]"
+          },
+          "Location": {
+            "value": "[parameters('location')]"
+          },
+          "Tags_Application": {
+            "Value": "[parameters('Tags_Application')]"
+          },
+          "Tags_CostCenter": {
+            "value": "[parameters('Tags_CostCenter')]"
+          },
+          "Tags_Department": {
+            "value": "[parameters('Tags_Department')]"
+          },
+          "Tags_Environment": {
+            "value": "[parameters('Tags_Environment')]"
+          },
+          "vNETRef_Hub": {
+            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Hub.value]"
+          }
+        }
+      },
+      "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-security')]",
+      "condition": "[parameters('2_Deploy_NVA_Cisco')]",
+      "dependsOn": [
+        "2_Deploy_Storage_Template"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "2_Deploy_NVA_PaloAlto_Template",
+      "apiVersion": "2017-08-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('Templates')['nva_paloalto'].Link]"
+        },
+        "parameters": {
+          "Admin_Password": {
+            "value": "[parameters('Admin_Password')]"
+          },
+          "Admin_UserName": {
+            "value": "[parameters('Admin_UserName')]"
+          },
+          "Auth_authenticationType": {
+            "value": "[parameters('Auth_authenticationType')]"
+          },
+          "Auth_sshPublicKey": {
+            "value": "[parameters('Auth_sshPublicKey')]"
+          },
+          "Client_Prefix": {
+            "value": "[parameters('Client_Prefix')]"
+          },
+          "DomainName": {
+            "value": "[parameters('DomainName')]"
+          },
+          "IPAddress_Space": {
+            "value": "[parameters('IPAddress_Space')]"
+          },
+          "Location": {
+            "value": "[parameters('location')]"
+          },
+          "Tags_Application": {
+            "Value": "[parameters('Tags_Application')]"
+          },
+          "Tags_CostCenter": {
+            "value": "[parameters('Tags_CostCenter')]"
+          },
+          "Tags_Department": {
+            "value": "[parameters('Tags_Department')]"
+          },
+          "Tags_Environment": {
+            "value": "[parameters('Tags_Environment')]"
+          },
+          "vNETRef_Hub": {
+            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Hub.value]"
+          }
+        }
+      },
+      "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-security')]",
+      "condition": "[parameters('2_Deploy_NVA_PaloAlto')]",
+      "dependsOn": [
+        "2_Deploy_Storage_Template"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "3_Deploy_Domain_Template",
+      "apiVersion": "2017-08-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('Templates')['domain_1_build'].Link]"
+        },
+        "parameters": {
+          "Admin_Password": {
+            "value": "[parameters('Admin_Password')]"
+          },
+          "Admin_UserName": {
+            "value": "[parameters('Admin_UserName')]"
+          },
+          "backupPolicyName": {
+            "value": "[parameters('backupPolicyName')]"
+          },
+          "Client_Prefix": {
+            "value": "[parameters('Client_Prefix')]"
+          },
+          "DomainFQDN": {
+            "value": "[variables('DomainFQDN')]"
+          },
+          "DSC_domain_1_build_pdc_url": {
+            "value": "[variables('DSC')['domain_1_build_pdc'].Link]"
+          },
+          "DSC_domain_2_prepare_bdc_url": {
+            "value": "[variables('DSC')['domain_2_prepare_bdc'].Link]"
+          },
+          "DSC_domain_3_build_bdc_url": {
+            "value": "[variables('DSC')['domain_3_build_bdc'].Link]"
+          },
+          "Hybrid_Use_Benifit": {
+            "value": "[parameters('Hybrid_Use_Benifit')]"
+          },
+          "IPAddress_Space": {
+            "value": "[parameters('IPAddress_Space')]"
+          },
+          "JoinUser": {
+            "value": "[variables('JoinUser')]"
+          },
+          "Location": {
+            "value": "[parameters('location')]"
+          },
+          "Monitor_Storage_url": {
+            "value": "[variables('Monitor_Storage_url')]"
+          },
+          "Tags_Application": {
+            "Value": "[parameters('Tags_Application')]"
+          },
+          "Tags_CostCenter": {
+            "value": "[parameters('Tags_CostCenter')]"
+          },
+          "Tags_Department": {
+            "value": "[parameters('Tags_Department')]"
+          },
+          "Tags_Environment": {
+            "value": "[parameters('Tags_Environment')]"
+          },
+          "Template_core_vnet_updatedns_url": {
+            "Value": "[variables('Templates')['core_vnet_UpdateDNS'].Link]"
+          },
+          "Template_domain_2_config_bdc_url": {
+            "value": "[variables('Templates')['domain_2_config_bdc'].Link]"
+          },
+          "vNETRef_Hub": {
+            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Hub.value]"
+          }
+        }
+      },
+      "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-identity')]",
+      "condition": "[parameters('3_Deploy_ActiveDirectory')]",
+      "dependsOn": [
+        "2_Deploy_Storage_Template"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "4_Deploy_DFS_Template",
+      "apiVersion": "2017-08-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('Templates')['shared_DFS_build'].Link]"
+        },
+        "parameters": {
+          "Admin_Password": {
+            "value": "[parameters('Admin_Password')]"
+          },
+          "Admin_UserName": {
+            "value": "[parameters('Admin_UserName')]"
+          },
+          "backupPolicyName": {
+            "value": "[parameters('backupPolicyName')]"
+          },
+          "Client_Prefix": {
+            "value": "[parameters('Client_Prefix')]"
+          },
+          "DomainFQDN": {
+            "value": "[variables('DomainFQDN')]"
+          },
+          "Hybrid_Use_Benifit": {
+            "value": "[parameters('Hybrid_Use_Benifit')]"
+          },
+          "IPAddress_Space": {
+            "value": "[parameters('IPAddress_Space')]"
+          },
+          "JoinUser": {
+            "value": "[variables('JoinUser')]"
+          },
+          "Location": {
+            "value": "[parameters('location')]"
+          },
+          "Monitor_Storage_url": {
+            "value": "[variables('Monitor_Storage_url')]"
+          },
+          "Scripts_DFS_build_ha_url": {
+            "value": "[variables('Scripts')['DFS_build_ha'].Link]"
+          },
+          "Tags_Application": {
+            "Value": "[parameters('Tags_Application')]"
+          },
+          "Tags_CostCenter": {
+            "value": "[parameters('Tags_CostCenter')]"
+          },
+          "Tags_Department": {
+            "value": "[parameters('Tags_Department')]"
+          },
+          "Tags_Environment": {
+            "value": "[parameters('Tags_Environment')]"
+          },
+          "vNETRef_Hub": {
+            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Hub.value]"
+          }
+        }
+      },
+      "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-sharedservices')]",
+      "condition": "[parameters('4_Deploy_DFS_Farm')]",
+      "dependsOn": [
+        "3_Deploy_Domain_Template"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "5_Deploy_RDS_Template",
+      "apiVersion": "2017-08-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('Templates')['shared_RDS_buildfarm'].Link]"
+        },
+        "parameters": {
+          "Admin_Password": {
+            "value": "[parameters('Admin_Password')]"
+          },
+          "Admin_UserName": {
+            "value": "[parameters('Admin_UserName')]"
+          },
+          "backupPolicyName": {
+            "value": "[parameters('backupPolicyName')]"
+          },
+          "Client_Prefix": {
+            "value": "[parameters('Client_Prefix')]"
+          },
+          "DomainFQDN": {
+            "value": "[variables('DomainFQDN')]"
+          },
+          "DSC_rds_1_configuration_url": {
+            "value": "[variables('DSC')['rds_1_configuration'].Link]"
+          },
+          "Hybrid_Use_Benifit": {
+            "value": "[parameters('Hybrid_Use_Benifit')]"
+          },
+          "IPAddress_Space": {
+            "value": "[parameters('IPAddress_Space')]"
+          },
+          "JoinUser": {
+            "value": "[variables('JoinUser')]"
+          },
+          "Location": {
+            "value": "[parameters('location')]"
+          },
+          "Monitor_Storage_url": {
+            "value": "[variables('Monitor_Storage_url')]"
+          },
+          "Scripts_rds_1_connectionbroker_ha_url": {
+            "value": "[variables('Scripts')['rds_1_connectionbroker_ha'].Link]"
+          },
+          "Scripts_rds_2_web_gw_postconfig_url": {
+            "value": "[variables('Scripts')['rds_2_web_gw_postconfig'].Link]"
+          },
+          "SQLAdmin_Password": {
+            "value": "[parameters('SQLAdmin_Password')]"
+          },
+          "SQLAdmin_UserName": {
+            "value": "[parameters('SQLAdmin_UserName')]"
+          },
+          "Tags_Application": {
+            "value": "[parameters('Tags_Application')]"
+          },
+          "Tags_CostCenter": {
+            "value": "[parameters('Tags_CostCenter')]"
+          },
+          "Tags_Department": {
+            "value": "[parameters('Tags_Department')]"
+          },
+          "Tags_Environment": {
+            "value": "[parameters('Tags_Environment')]"
+          },
+          "vNETRef_Hub": {
+            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Hub.value]"
+          }
+        }
+      },
+      "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-sharedservices')]",
+      "condition": "[parameters('5_Deploy_RDS_Farm')]",
+      "dependsOn": [
+        "4_Deploy_DFS_Template"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "6_Deploy_WORKLOAD_placeholder",
+      "apiVersion": "2017-08-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('Templates')['WORKLOAD_placeholder'].Link]"
+        },
+        "parameters": {
+          "Admin_Password": {
+            "value": "[parameters('Admin_Password')]"
+          },
+          "Admin_UserName": {
+            "value": "[parameters('Admin_UserName')]"
+          },
+          "backupPolicyName": {
+            "value": "[parameters('backupPolicyName')]"
+          },
+          "Client_Prefix": {
+            "value": "[parameters('Client_Prefix')]"
+          },
+          "DomainName": {
+            "value": "[parameters('DomainName')]"
+          },
+          "Hybrid_Use_Benifit": {
+            "value": "[parameters('Hybrid_Use_Benifit')]"
+          },
+          "IPAddress_Space": {
+            "value": "[parameters('IPAddress_Space')]"
+          },
+          "Location": {
+            "value": "[parameters('location')]"
+          },
+          "Tags_Application": {
+            "Value": "[parameters('Tags_Application')]"
+          },
+          "Tags_CostCenter": {
+            "value": "[parameters('Tags_CostCenter')]"
+          },
+          "Tags_Department": {
+            "value": "[parameters('Tags_Department')]"
+          },
+          "vNETRef_Spoke": {
+            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Spoke.value]"
+          }
+        }
+      },
+      "condition": "[parameters('6_Deploy_Tempalte_WORKLOAD_placeholder')]",
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "7_Deploy_ExpressRoute",
+      "apiVersion": "2017-08-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('Templates')['core_vnet_expressroute'].Link]"
+        },
+        "parameters": {
+          "Client_Prefix": {
+            "value": "[parameters('Client_Prefix')]"
+          },
+          "Location": {
+            "value": "[parameters('location')]"
+          },
+          "Tags_Application": {
+            "Value": "[parameters('Tags_Application')]"
+          },
+          "Tags_CostCenter": {
+            "value": "[parameters('Tags_CostCenter')]"
+          },
+          "Tags_Department": {
+            "value": "[parameters('Tags_Department')]"
+          },
+          "Tags_Environment": {
+            "value": "[parameters('Tags_Environment')]"
+          }
+        }
+      },
+      "condition": "[parameters('7_Deploy_ExpressRoute')]",
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "7_Deploy_VPN",
+      "apiVersion": "2017-08-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('Templates')['core_vnet_vpn_gateway'].Link]"
+        },
+        "parameters": {
+          "Client_Prefix": {
+            "value": "[parameters('Client_Prefix')]"
+          },
+          "gatewaySku": {
+            "value": "VpnGw1"
+          },
+          "Location": {
+            "value": "[parameters('location')]"
+          },
+          "Tags_Application": {
+            "Value": "[parameters('Tags_Application')]"
+          },
+          "Tags_CostCenter": {
+            "value": "[parameters('Tags_CostCenter')]"
+          },
+          "Tags_Department": {
+            "value": "[parameters('Tags_Department')]"
+          },
+          "Tags_Environment": {
+            "value": "[parameters('Tags_Environment')]"
+          }
+        }
+      },
+      "condition": "[parameters('7_Deploy_VPN')]",
+      "dependsOn": [
+
+      ]
+    }
+  ],
+  "outputs": {
+
+  }
+} 

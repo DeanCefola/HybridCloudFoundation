@@ -1,0 +1,91 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Client_Prefix": {
+      "type": "string"
+    },
+    "Location": {
+      "type": "string"
+    },
+    "Tags_Application": {
+      "type": "string"
+    },
+    "Tags_CostCenter": {
+      "type": "string"
+    },
+    "Tags_Department": {
+      "type": "string"
+    },
+    "Tags_Environment": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "KeyVaultName": "[concat(parameters('Client_Prefix'), 'KeyVault01')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[variables('KeyVaultName')]",
+      "apiVersion": "2016-10-01",
+      "location": "[parameters('Location')]",
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "KeyVault"
+      },
+      "properties": {
+        "sku": {
+          "family": "A",
+          "name": "premium"
+        },
+        "tenantId": "[subscription().tenantId]",
+        "accessPolicies": [
+          {
+            "tenantId": "[subscription().tenantId]",
+           "objectId": "2af39dce-b999-4877-bfdb-5eec986497ed",
+            "permissions": {
+              "keys": [],
+              "secrets": [
+                "get",
+                "delete",
+                "list",
+                "set",
+                "recover",
+                "backup",
+                "restore"
+              ],
+              "certificates": [],
+              "storage": []
+            }
+          },
+          {
+            "tenantId": "[subscription().tenantId]",
+            "objectId": "165b3338-15e0-4d1a-8e5e-44bb3f2c7139",
+            "permissions": {
+              "keys": [
+                "wrapKey"
+              ],
+              "secrets": [
+                "set"
+              ],
+              "certificates": [],
+              "storage": []
+            }
+          }
+        ],
+        "enabledForDeployment": true,
+        "enabledForDiskEncryption": true,
+        "enabledForTemplateDeployment": true,
+        "vaultUri": "[concat('https://', variables('KeyVaultName'), '.vault.azure.net/')]",
+        "provisioningState": "Succeeded"
+      }
+    }
+  ],
+  "outputs": {
+
+  }
+}

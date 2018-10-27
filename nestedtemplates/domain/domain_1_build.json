@@ -1,0 +1,549 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Admin_Password": {
+      "type": "securestring"
+    },
+    "Admin_UserName": {
+      "type": "string"
+    },
+    "backupPolicyName": {
+      "type": "string"
+    },
+    "Client_Prefix": {
+      "type": "string"
+    },
+    "DomainFQDN": {
+      "type": "string"
+    },
+    "DSC_domain_1_build_pdc_url": {
+      "type": "string"
+    },
+    "DSC_domain_2_prepare_bdc_url": {
+      "type": "string"
+    },
+    "DSC_domain_3_build_bdc_url": {
+      "type": "string"
+    },
+    "Hybrid_Use_Benifit": {
+      "type": "string"
+    },
+    "IPAddress_Space": {
+      "type": "string"
+    },
+    "JoinUser": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "Monitor_Storage_url": {
+      "type": "string"
+    },
+    "Tags_Application": {
+      "type": "string"
+    },
+    "Tags_CostCenter": {
+      "type": "string"
+    },
+    "Tags_Department": {
+      "type": "string"
+    },
+    "Tags_Environment": {
+      "type": "string"
+    },
+    "Template_core_vnet_updatedns_url": {
+      "type": "string"
+    },
+    "Template_domain_2_config_bdc_url": {
+      "type": "string"
+    },
+    "vNETRef_Hub": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "AVSetInfo": [
+      {
+        "AVSetName": "[concat(parameters('Client_Prefix'), 'AVSetDC')]"
+      }
+    ],
+    "PDCInfo": [
+      {
+        "VMName": "[concat(parameters('Client_Prefix'), 'DC00')]",
+        "VMSize": "Standard_F2s",
+        "VMAvSet": "[concat(parameters('Client_Prefix'), 'AVSetDC')]",
+        "VMNicName": "[concat(parameters('Client_Prefix'), 'DC00-NIC')]",
+        "VMNicSubnet": "[concat(parameters('vNETRef_Hub'), '/subnets/Identity')]",
+        "VMNicIP": "[concat(parameters('IPAddress_Space'), '.0.4')]",
+        "VMDscName": "CreateADPDC",
+        "VmDscArchive": "[parameters('DSC_domain_1_build_pdc_url')]",
+        "VmDscScript": "createadpdc.ps1",
+        "VmDscFunction": "\\CreateADPDC",
+        "VmStorage": "Standard_LRS",
+        "VmOSSize": "128",
+        "VMDataSize": "32",
+        "VmAccelNetwork": false,
+        "BackupVaultName": "[concat(parameters('Client_Prefix'), 'BackupVault')]",
+        "BackupVaultRGName": "[concat(parameters('Client_Prefix'), '-RG-security')]"
+      }
+    ],
+    "BDCInfo": [
+      {
+        "VMName": "[concat(parameters('Client_Prefix'), 'DC01')]",
+        "VMSize": "Standard_F2s",
+        "VMAvSet": "[concat(parameters('Client_Prefix'), 'AVSetDC')]",
+        "VMNicName": "[concat(parameters('Client_Prefix'), 'DC01-NIC')]",
+        "VMNicSubnet": "[concat(parameters('vNETRef_Hub'), '/subnets/Identity')]",
+        "VMNicIP": "[concat(parameters('IPAddress_Space'), '.0.5')]",
+        "VMDscName": "PrepareBDC",
+        "VmDscArchive": "[concat(parameters('DSC_domain_2_prepare_bdc_url'))]",
+        "VmDscScript": "PrepareADBDC.ps1",
+        "VmDscFunction": "\\PrepareADBDC",
+        "VmStorage": "Standard_LRS",
+        "VmOSSize": "128",
+        "VMDataSize": "32",
+        "VmAccelNetwork": false
+      }
+    ],    
+    "BackupVaultName": "[concat(parameters('Client_Prefix'), 'BackupVault')]",
+    "BackupVaultResourceGroup": "[concat(parameters('Client_Prefix'), '-RG-security')]",
+    "ProtectedVMs": [
+      {
+        "name": "[concat(parameters('Client_Prefix'), 'DC00-BackupIntent')]",
+        "VMName": "[concat(parameters('Client_Prefix'), 'DC00')]",
+        "vmRGName": "[resourceGroup().name]",
+        "backupItemName": "[concat('vm;iaasvmcontainerv2;', resourceGroup().name, ';', parameters('Client_Prefix'), 'DC00')]"
+      },
+      {
+        "name": "[concat(parameters('Client_Prefix'), 'DC01-BackupIntent')]",
+        "VMName": "[concat(parameters('Client_Prefix'), 'DC01')]",
+        "vmRGName": "[resourceGroup().name]",
+        "backupItemName": "[concat('vm;iaasvmcontainerv2;', resourceGroup().name, ';', parameters('Client_Prefix'), 'DC01')]"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('AVSetInfo')[copyIndex()].AVSetName]",
+      "apiVersion": "2016-04-30-preview",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "AVSetCopy",
+        "count": "[length(variables('AVSetInfo'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "Availability Set"
+      },
+      "sku": {
+        "name": "Aligned"
+      },
+      "properties": {
+        "platformUpdateDomainCount": 5,
+        "platformFaultDomainCount": 2
+      },
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('PDCInfo')[copyIndex()].VMNicName]",
+      "apiVersion": "2016-03-30",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "PDCNicCopy",
+        "count": "[length(variables('PDCInfo'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "PDC Network Interface"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[concat(variables('PDCInfo')[copyIndex()].VMNicIP)]",
+              "subnet": {
+                "id": "[variables('PDCInfo')[copyIndex()].VMNicSubnet]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": []
+        },
+        "enableIPForwarding": false,
+        "enableAcceleratedNetworking": "[variables('PDCInfo')[copyIndex()].VmAccelNetwork]"
+      },
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('PDCInfo')[copyIndex()].VMName]",
+      "apiVersion": "2017-03-30",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "PDCCopy",
+        "count": "[length(variables('PDCInfo'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "PDC Domain Controller"
+      },
+      "properties": {
+        "availabilitySet": {
+          "id": "[concat(resourceId('Microsoft.Compute/availabilitySets/', variables('PDCInfo')[copyIndex()].VMAvSet))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[variables('PDCInfo')[copyIndex()].VMSize]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2016-Datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "osType": "Windows",
+            "name": "[concat(variables('PDCInfo')[copyIndex()].VMName,'_OsDisk')]",
+            "createOption": "FromImage",
+            "caching": "ReadWrite",
+            "managedDisk": {
+              "storageAccountType": "[variables('PDCInfo')[copyIndex()].VmStorage]"
+            },
+            "diskSizeGB": "[variables('PDCInfo')[copyIndex()].VmOSSize]"
+          },
+          "dataDisks": [
+            {
+              "name": "[concat(variables('PDCInfo')[copyIndex()].VMName,'_DataDisk')]",
+              "lun": 0,
+              "createOption": "Empty",
+              "caching": "None",
+              "diskSizeGB": "[variables('PDCInfo')[copyIndex()].VmDataSize]",
+              "managedDisk": {
+                "storageAccountType": "[variables('PDCInfo')[copyIndex()].VmStorage]"
+              }
+            }
+          ]
+        },
+        "osProfile": {
+          "computerName": "[variables('PDCInfo')[copyIndex()].VMName]",
+          "adminUsername": "[parameters('Admin_UserName')]",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "adminPassword": "[parameters('Admin_Password')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[concat(resourceId('Microsoft.Network/networkInterfaces/', variables('PDCInfo')[copyIndex()].VMNicName))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[parameters('Monitor_Storage_url')]"
+          }
+        },
+        "licenseType": "[parameters('Hybrid_Use_Benifit')]"
+      },
+      "dependsOn": [
+        "AVSetCopy",
+        "PDCNicCopy"
+      ],
+      "resources": [
+        {
+          "type": "extensions",
+          "name": "[variables('PDCInfo')[copyIndex()].VMDscName]",
+          "apiVersion": "2016-04-30-preview",
+          "location": "[parameters('location')]",
+          "tags": {
+            "displayName": "PDC Domain Services"
+          },
+          "properties": {
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.19",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "modulesUrl": "[variables('PDCInfo')[copyIndex()].VmDscArchive]",
+              "configurationFunction": "[concat(variables('PDCInfo')[copyIndex()].VMDscScript, variables('PDCInfo')[copyIndex()].VMDscFunction)]",
+              "properties": {
+                "domainName": "[parameters('DomainFQDN')]",
+                "adminCreds": {
+                  "userName": "[parameters('Admin_UserName')]",
+                  "password": "PrivateSettingsRef:Admin_Password"
+                }
+              }
+            },
+            "protectedSettings": {
+              "items": {
+                "Admin_Password": "[parameters('Admin_Password')]"
+              }
+            }
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', variables('PDCInfo')[copyIndex()].VMName)]"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "UpdateVNetDNS",
+      "apiVersion": "2017-08-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[parameters('Template_core_vnet_updatedns_url')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "Client_Prefix": {
+            "value": "[parameters('Client_Prefix')]"
+          },
+          "DNSServers": {
+            "value": [
+              "[concat(parameters('IPAddress_Space'), '.0.4')]",
+              "[concat(parameters('IPAddress_Space'), '.0.5')]"
+            ]
+          },
+          "IPAddress_Space": {
+            "value": "[parameters('IPAddress_Space')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "Tags_Application": {
+            "value": "[parameters('Tags_Application')]"
+          },
+          "Tags_CostCenter": {
+            "value": "[parameters('Tags_CostCenter')]"
+          },
+          "Tags_Department": {
+            "value": "[parameters('Tags_Department')]"
+          },
+          "Tags_Environment": {
+            "value": "[parameters('Tags_Environment')]"
+          }
+        }
+      },
+      "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-vnets')]",
+      "dependsOn": [
+        "CreateADPDC"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('BDCInfo')[copyIndex()].VMNicName]",
+      "apiVersion": "2016-03-30",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "BDCNicCopy",
+        "count": "[length(variables('BDCInfo'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "BDC Network Interface"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[concat(variables('BDCInfo')[copyIndex()].VMNicIP)]",
+              "subnet": {
+                "id": "[variables('BDCInfo')[copyIndex()].VMNicSubnet]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": []
+        },
+        "enableIPForwarding": false,
+        "enableAcceleratedNetworking": "[variables('BDCInfo')[copyIndex()].VmAccelNetwork]"
+      },
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('BDCInfo')[copyIndex()].VMName]",
+      "apiVersion": "2017-03-30",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "BDCCopy",
+        "count": "[length(variables('BDCInfo'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "BDC Domain Controller"
+      },
+      "properties": {
+        "availabilitySet": {
+          "id": "[concat(resourceId('Microsoft.Compute/availabilitySets/', variables('BDCInfo')[copyIndex()].VMAvSet))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[variables('BDCInfo')[copyIndex()].VMSize]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2016-Datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "osType": "Windows",
+            "name": "[concat(variables('BDCInfo')[copyIndex()].VMName,'_OsDisk')]",
+            "createOption": "FromImage",
+            "caching": "ReadWrite",
+            "managedDisk": {
+              "storageAccountType": "[variables('BDCInfo')[copyIndex()].VmStorage]"
+            },
+            "diskSizeGB": "[variables('BDCInfo')[copyIndex()].VmOSSize]"
+          },
+          "dataDisks": [
+            {
+              "name": "[concat(variables('BDCInfo')[copyIndex()].VMName,'_DataDisk')]",
+              "lun": 0,
+              "createOption": "Empty",
+              "caching": "None",
+              "diskSizeGB": "[variables('BDCInfo')[copyIndex()].VmDataSize]",
+              "managedDisk": {
+                "storageAccountType": "[variables('BDCInfo')[copyIndex()].VmStorage]"
+              }
+            }
+          ]
+        },
+        "osProfile": {
+          "computerName": "[variables('BDCInfo')[copyIndex()].VMName]",
+          "adminUserName": "[parameters('Admin_UserName')]",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "adminPassword": "[parameters('Admin_Password')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[concat(resourceId('Microsoft.Network/networkInterfaces/', variables('BDCInfo')[copyIndex()].VMNicName))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[parameters('Monitor_Storage_url')]"
+          }
+        },
+        "licenseType": "[parameters('Hybrid_Use_Benifit')]"
+      },
+      "dependsOn": [
+        "AVSetCopy",
+        "BDCNicCopy",
+        "UpdateVNetDNS"
+      ]
+    },
+    {
+      "name": "[concat(variables('BDCInfo')[copyIndex()].VMName, '/PrepareBDC')]",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "location": "[parameters('location')]",
+      "apiVersion": "2016-04-30-preview",
+      "copy": {
+        "name": "PrepBDCCopy",
+        "count": "[length(variables('BDCInfo'))]"
+      },
+      "tags": {
+        "displayName": "Prep BDC"
+      },
+      "properties": {
+        "publisher": "Microsoft.Powershell",
+        "type": "DSC",
+        "typeHandlerVersion": "2.19",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "modulesUrl": "[variables('BDCInfo')[copyIndex()].VmDscArchive]",
+          "configurationFunction": "[concat(variables('BDCInfo')[copyIndex()].VmDscScript, variables('BDCInfo')[copyIndex()].VmDscFunction)]",
+          "properties": {
+            "DNSServer": "[concat(parameters('IPAddress_Space'), '.0.4')]"
+          }
+        },
+        "protectedSettings": {
+        }
+      },
+      "dependsOn": [
+        "BDCCopy"
+      ]
+    },
+    {
+      "name": "ConfigureBDC",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[parameters('Template_domain_2_config_bdc_url')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "Admin_Password": {
+            "value": "[parameters('Admin_Password')]"
+          },
+          "Admin_UserName": {
+            "value": "[parameters('Admin_UserName')]"
+          },
+          "Client_Prefix": {
+            "value": "[parameters('Client_Prefix')]"
+          },
+          "DSC_domain_3_build_bdc_url": {
+            "value": "[parameters('DSC_domain_3_build_bdc_url')]"
+          },
+          "DomainFQDN": {
+            "value": "[parameters('DomainFQDN')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          }
+        }
+      },
+      "dependsOn": [
+        "PrepBDCCopy"
+      ]
+    }
+  ],
+  "outputs": {
+
+  }
+}

@@ -1,0 +1,1022 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Admin_Password": {
+      "type": "securestring"
+    },
+    "Admin_UserName": {
+      "type": "string"
+    },
+    "backupPolicyName": {
+      "type": "string"
+    },    
+    "Client_Prefix": {
+      "type": "string"
+    },
+    "DomainFQDN": {
+      "type": "string"
+    },
+    "DSC_rds_1_configuration_url": {
+      "type": "string"
+    },
+    "Hybrid_Use_Benifit": {
+      "type": "string"
+    },
+    "IPAddress_Space": {
+      "type": "string"
+    },
+    "JoinUser": {
+      "type": "string"
+    },
+    "Location": {
+      "type": "string"
+    },
+    "Monitor_Storage_url": {
+      "type": "string"
+    },
+    "Scripts_rds_1_connectionbroker_ha_url": {
+      "type": "string"
+    },
+    "Scripts_rds_2_web_gw_postconfig_url": {
+      "type": "string"
+    },
+    "SQLAdmin_Password": {
+      "type": "string"
+    },
+    "SQLAdmin_UserName": {
+      "type": "string"
+    },
+    "Tags_Application": {
+      "type": "string"
+    },
+    "Tags_CostCenter": {
+      "type": "string"
+    },
+    "Tags_Department": {
+      "type": "string"
+    },
+    "Tags_Environment": {
+      "type": "string"
+    },
+    "vNETRef_Hub": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "DC1VMName": "[concat(parameters('Client_Prefix'), 'DC00')]",
+    "DC2VMName": "[concat(parameters('Client_Prefix'), 'DC01')]",
+    "DFS1Hostname": "[concat(parameters('Client_Prefix'), 'DFS00')]",
+    "DFS2Hostname": "[concat(parameters('Client_Prefix'), 'DFS01')]",
+    "RdsCb00Hostname": "[concat(parameters('Client_Prefix'), 'RdsCb00')]",
+    "RdsCb01Hostname": "[concat(parameters('Client_Prefix'), 'RdsCb01')]",
+    "RdsLic00Hostname": "[concat(parameters('Client_Prefix'), 'RdsLic00')]",
+    "RdsSh00Hostname": "[concat(parameters('Client_Prefix'), 'RdsSh00')]",
+    "RdsSh01Hostname": "[concat(parameters('Client_Prefix'), 'RdsSh01')]",
+    "RdsSh02Hostname": "[concat(parameters('Client_Prefix'), 'RdsSh02')]",
+    "RdsSh03Hostname": "[concat(parameters('Client_Prefix'), 'RdsSh03')]",
+    "RdsWa00Hostname": "[concat(parameters('Client_Prefix'), 'RdsWa00')]",
+    "RdsWa01Hostname": "[concat(parameters('Client_Prefix'), 'RdsWa01')]",
+    "BrokerServer": "[concat(variables('RdsCb00Hostname'))]",
+    "NewBrokerServer": "[concat(variables('RdsCb01Hostname'))]",
+    "WebserverName1": "[variables('RdsWa00Hostname')]",
+    "WebserverName2": "[variables('RdsWa01Hostname')]",
+    "ConnectionBrokerLBDNSIP": "[concat(parameters('IPAddress_Space'), '.0.175')]",
+    "WebAccessLBDNSIP": "[concat(parameters('IPAddress_Space'), '.0.176')]",
+    "AzureDatabaseName": "[variables('SQLInfo').SQLDatabaseName]",
+    "AzureSQLName": "[concat(variables('SQLInfo').SQLName, '.database.windows.net')]",
+    "SQLUid": "[concat('SQLAdmin', '@', variables('SQLInfo').SQLName)]",
+    "JoinVMs": "[concat(variables('RdsCbInfo'), variables('RdsLicInfo'), variables('RdsShInfo'), variables('RdsWebInfo'))]",
+    "RdsBuildVMs": "[concat(variables('RdsShInfo'), variables('RdsLicInfo'))]",
+    "RdsIlbBuildVMs": "[concat(variables('RdsCbInfo'), variables('RdsWebInfo'))]",
+    "HABrokercommandToExecute":  "[concat('powershell.exe -ExecutionPolicy Unrestricted -File rds_1_connectionbroker_ha.ps1',' ','-Adminusername \"',parameters('Admin_UserName'),'\" ', '-Adminuserpassword \"',parameters('Admin_Password'),'\" ','-BrokerServer \"',variables('BrokerServer'),'\" ','-DomainFQDN \"',parameters('DomainFQDN'),'\" ','-AzureSqlName \"',variables('AzureSqlName'),'\" ','-AzureDatabaseName \"',variables('AzureDatabaseName'),'\" ','-SQLUid \"',variables('SQLUid'),'\" ','-SQLPassword \"',parameters('Admin_Password'),'\" ','-NewBrokerServer \"',variables('NewBrokerServer'),'\" ','-ConnectionBrokerLBDNSName \"','RDSBroker')]",
+    "HAWebAccesscommandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File rds_2_web_gw_postconfig.ps1',' ','-Adminusername \"',parameters('Admin_UserName'),'\" ', '-Adminuserpassword \"',parameters('Admin_Password'),'\" ','-BrokerServer \"',variables('BrokerServer'),'\" ','-DomainFQDN \"',parameters('DomainFQDN'),'\" ','-webAccessServer1 \"',variables('WebserverName1'),'\" ','-DC2VMName \"',variables('DC2VMName'),'\" ','-DC1VMName \"',variables('DC1VMName'),'\" ','-ConnectionBrokerLBDNSIP \"',variables('ConnectionBrokerLBDNSIP'),'\" ','-WebAccessLBDNSIP \"',variables('WebAccessLBDNSIP'),'\" ','-WebAccessLBDNSName \"','RDSWebAccess','\" ','-ConnectionBrokerLBDNSName \"','RDSBroker','\" ','-DFS1Hostname \"',variables('DFS1Hostname'),'\" ','-DFS2Hostname \"',variables('DFS2Hostname'),'\" ','-DFSSharePath \"','F:\\shares\\RDSUsers','\" ','-DFSRootPath \"','F:\\DFSRoots\\UsersProfile','\" ','-RDSComputersSecurityGroup \"','RDSAllComputersGroup','\" ','-webAccessServer2 \"',variables('WebserverName2'))]",
+    "AVSetInfo": [
+      "[concat(parameters('Client_Prefix'), 'AVSetRdsCB00')]",
+      "[concat(parameters('Client_Prefix'), 'AVSetRdsWA00')]",
+      "[concat(parameters('Client_Prefix'), 'AVSetRdsSH00')]",
+      "[concat(parameters('Client_Prefix'), 'AVSetRdsLIC00')]"
+    ],
+    "RdsCbInfo": [
+      {
+        "VMName": "[concat(parameters('Client_Prefix'), 'RDScb00')]",
+        "VMSize": "Standard_DS2_v2",
+        "VMAvSet": "[concat(parameters('Client_Prefix'), 'AVSetRdsCB00')]",
+        "VMNic": "[concat(parameters('Client_Prefix'), 'RDScb00-NIC')]",
+        "VMNicSubnet": "[concat(parameters('vNETRef_Hub'), '/subnets/SharedServices')]",
+        "VmStorage": "Standard_LRS",
+        "VmOSSize": "127",
+        "VMDataSize": "32",
+        "RDSILB": "[concat(resourceId('Microsoft.Network/loadBalancers','RDS-CB-ILB'),'/backendAddressPools/RDS-CB-ILB-BackEnd')]"
+      },
+      {
+        "VMName": "[concat(parameters('Client_Prefix'), 'RDScb01')]",
+        "VMSize": "Standard_DS2_v2",
+        "VMAvSet": "[concat(parameters('Client_Prefix'), 'AVSetRdsCB00')]",
+        "VMNic": "[concat(parameters('Client_Prefix'), 'RDScb01-NIC')]",
+        "VMNicSubnet": "[concat(parameters('vNETRef_Hub'), '/subnets/SharedServices')]",
+        "VmStorage": "Standard_LRS",
+        "VmOSSize": "127",
+        "VMDataSize": "32",
+        "RDSILB": "[concat(resourceId('Microsoft.Network/loadBalancers','RDS-CB-ILB'),'/backendAddressPools/RDS-CB-ILB-BackEnd')]"
+      }
+    ],
+    "RdsLicInfo": [
+      {
+        "VMName": "[concat(parameters('Client_Prefix'), 'RDSlic00')]",
+        "VMSize": "Standard_DS1_v2",
+        "VMAvSet": "[concat(parameters('Client_Prefix'), 'AVSetRdsLIC00')]",
+        "VMNic": "[concat(parameters('Client_Prefix'), 'RDSlic00-NIC')]",
+        "VMNicSubnet": "[concat(parameters('vNETRef_Hub'), '/subnets/SharedServices')]",
+        "VmStorage": "Standard_LRS",
+        "VmOSSize": "127",
+        "VMDataSize": "32"
+      }
+    ],
+    "RdsShInfo": [
+      {
+        "VMName": "[concat(parameters('Client_Prefix'), 'RDSsh00')]",
+        "VMSize": "Standard_D2s_v3",
+        "VMAvSet": "[concat(parameters('Client_Prefix'), 'AVSetRdsSH00')]",
+        "VMNic": "[concat(parameters('Client_Prefix'), 'RDSsh00-NIC')]",
+        "VMNicSubnet": "[concat(parameters('vNETRef_Hub'), '/subnets/SharedServices')]",
+        "VmStorage": "Standard_LRS",
+        "VmOSSize": "127",
+        "VMDataSize": "32"
+      },
+      {
+        "VMName": "[concat(parameters('Client_Prefix'), 'RDSsh01')]",
+        "VMSize": "Standard_D2s_v3",
+        "VMAvSet": "[concat(parameters('Client_Prefix'), 'AVSetRdsSH00')]",
+        "VMNic": "[concat(parameters('Client_Prefix'), 'RDSsh01-NIC')]",
+        "VMNicSubnet": "[concat(parameters('vNETRef_Hub'), '/subnets/SharedServices')]",
+        "VmStorage": "Standard_LRS",
+        "VmOSSize": "127",
+        "VMDataSize": "32"
+      },
+      {
+        "VMName": "[concat(parameters('Client_Prefix'), 'RDSsh02')]",
+        "VMSize": "Standard_D2s_v3",
+        "VMAvSet": "[concat(parameters('Client_Prefix'), 'AVSetRdsSH00')]",
+        "VMNic": "[concat(parameters('Client_Prefix'), 'RDSsh02-NIC')]",
+        "VMNicSubnet": "[concat(parameters('vNETRef_Hub'), '/subnets/SharedServices')]",
+        "VmStorage": "Standard_LRS",
+        "VmOSSize": "127",
+        "VMDataSize": "32"
+      },
+      {
+        "VMName": "[concat(parameters('Client_Prefix'), 'RDSsh03')]",
+        "VMSize": "Standard_D2s_v3",
+        "VMAvSet": "[concat(parameters('Client_Prefix'), 'AVSetRdsSH00')]",
+        "VMNic": "[concat(parameters('Client_Prefix'), 'RDSsh03-NIC')]",
+        "VMNicSubnet": "[concat(parameters('vNETRef_Hub'), '/subnets/SharedServices')]",
+        "VmStorage": "Standard_LRS",
+        "VmOSSize": "127",
+        "VMDataSize": "32"
+      }
+    ],
+    "RdsWebInfo": [
+      {
+        "VMName": "[concat(parameters('Client_Prefix'), 'RDSwa00')]",
+        "VMSize": "Standard_DS2_v2",
+        "VMAvSet": "[concat(parameters('Client_Prefix'), 'AVSetRdsWA00')]",
+        "VMNic": "[concat(parameters('Client_Prefix'), 'RDSwa00-NIC')]",
+        "VMNicSubnet": "[concat(parameters('vNETRef_Hub'), '/subnets/SharedServices')]",
+        "VmStorage": "Standard_LRS",
+        "VmOSSize": "127",
+        "VMDataSize": "32",
+        "RDSILB": "[concat(resourceId('Microsoft.Network/loadBalancers','RDS-WA-ILB'),'/backendAddressPools/RDS-WA-ILB-BackEnd')]"
+      },
+      {
+        "VMName": "[concat(parameters('Client_Prefix'), 'RDSwa01')]",
+        "VMSize": "Standard_DS2_v2",
+        "VMAvSet": "[concat(parameters('Client_Prefix'), 'AVSetRdsWA00')]",
+        "VMNic": "[concat(parameters('Client_Prefix'), 'RDSwa01-NIC')]",
+        "VMNicSubnet": "[concat(parameters('vNETRef_Hub'), '/subnets/SharedServices')]",
+        "VmStorage": "Standard_LRS",
+        "VmOSSize": "127",
+        "VMDataSize": "32",
+        "RDSILB": "[concat(resourceId('Microsoft.Network/loadBalancers','RDS-WA-ILB'),'/backendAddressPools/RDS-WA-ILB-BackEnd')]"
+      }
+    ],
+    "SQLInfo": {
+      "SQLName": "[concat(parameters('Client_Prefix'), '-rds-sql', uniqueString(resourceGroup().id))]",
+      "SQLDatabaseName": "RDS-SQLdb",
+      "SQLFirewallStart": "[concat(parameters('IPAddress_Space'), '.0.160')]",
+      "SQLFirewallEnd": "[concat(parameters('IPAddress_Space'), '.0.190')]",
+      "SQLCollation": "SQL_Latin1_General_CP1_CI_AS",
+      "SQLEdition": "Standard",
+      "SQLRequestedServiceObjectiveName": "S2"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('AVSetInfo')[copyIndex()]]",
+      "apiVersion": "2016-04-30-preview",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "AVSetCopy",
+        "count": "[length(variables('AVSetInfo'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "Availability Set"
+      },
+      "sku": {
+        "name": "Aligned"
+      },
+      "properties": {
+        "platformUpdateDomainCount": 5,
+        "platformFaultDomainCount": 2
+      },
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "RDS-WA-ILB",
+      "apiVersion": "2015-06-15",
+      "location": "[parameters('location')]",
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "RDS WA ILB"
+      },
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "RDS-WA-ILB-FrontEnd",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[concat(parameters('IPAddress_Space'), '.0.176')]",
+              "subnet": {
+                "id": "[concat(parameters('vNETRef_Hub'), '/subnets/SharedServices')]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "RDS-WA-ILB-BackEnd"
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "LBRule01",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','RDS-WA-ILB'),'/frontendIPConfigurations/RDS-WA-ILB-FrontEnd')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','RDS-WA-ILB'),'/backendAddressPools/RDS-WA-ILB-BackEnd')]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 443,
+              "backendPort": 443,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 5,
+              "loadDistribution": "SourceIPProtocol",
+              "probe": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','RDS-WA-ILB'),'/probes/tcpProbe')]"
+              }
+            }
+          },
+          {
+            "name": "LBRule02",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','RDS-WA-ILB'),'/frontendIPConfigurations/RDS-WA-ILB-FrontEnd')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','RDS-WA-ILB'),'/backendAddressPools/RDS-WA-ILB-BackEnd')]"
+              },
+              "protocol": "Udp",
+              "frontendPort": 3391,
+              "backendPort": 3391,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 5,
+              "loadDistribution": "SourceIPProtocol",
+              "probe": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','RDS-WA-ILB'),'/probes/tcpProbe')]"
+              }
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "tcpProbe",
+            "properties": {
+              "protocol": "Tcp",
+              "port": 443,
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2,
+            }
+          },
+          {
+            "name": "tcpProbe01",
+            "properties": {
+              "protocol": "Tcp",
+              "port": 3391,
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2
+            }
+          }
+        ],
+        "inboundNatRules": [
+         
+        ]
+      },
+      "dependsOn": [
+        "RDS-CB-ILB"
+      ]      
+    },
+    {
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "RDS-CB-ILB",
+      "apiVersion": "2015-06-15",
+      "location": "[parameters('location')]",
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "RDS CB ILB"
+      },
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "RDS-CB-ILB-FrontEnd",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[concat(parameters('IPAddress_Space'), '.0.175')]",
+              "subnet": {
+                "id": "[concat(parameters('vNETRef_Hub'), '/subnets/SharedServices')]"
+              }
+
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "RDS-CB-ILB-BackEnd"
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "LBRule01",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','RDS-CB-ILB'),'/frontendIPConfigurations/RDS-CB-ILB-FrontEnd')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','RDS-CB-ILB'),'/backendAddressPools/RDS-CB-ILB-BackEnd')]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 3389,
+              "backendPort": 3389,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 5,
+              "loadDistribution": "SourceIPProtocol",
+              "probe": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers','RDS-CB-ILB'),'/probes/tcpProbe')]"
+              }
+            }
+          }
+
+        ],
+        "probes": [
+          {
+            "name": "tcpProbe",
+            "properties": {
+              "protocol": "Tcp",
+              "port": 3389,
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2
+            }
+          }
+        ],
+        "inboundNatRules": [
+
+        ]
+      },
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('RdsBuildVMs')[copyIndex()].VMNic)]",
+      "apiVersion": "2016-03-30",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "RdsBuildNicCopy",
+        "count": "[length(variables('RdsBuildVMs'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "RDS Nics"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('RdsBuildVMs')[copyIndex()].VMNicSubnet]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": []
+        },
+        "enableIPForwarding": false
+      },
+      "dependsOn": [
+        "RdsIlbNicCopy"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('RdsIlbBuildVMs')[copyIndex()].VMNic)]",
+      "apiVersion": "2016-03-30",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "RdsIlbNicCopy",
+        "count": "[length(variables('RdsIlbBuildVMs'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "RDS ILB Nics"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('RdsIlbBuildVMs')[copyIndex()].VMNicSubnet]"
+              },
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[variables('RdsIlbBuildVMs')[copyIndex()].RDSILB]"
+                }
+              ]
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": []
+        },
+        "enableIPForwarding": false
+      },
+      "dependsOn": [
+        "RDS-WA-ILB",
+        "RDS-CB-ILB"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('RdsBuildVMs')[copyIndex()].VMName]",
+      "apiVersion": "2017-03-30",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "RdsIlbVmCopy",
+        "count": "[length(variables('RdsBuildVMs'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "RDS Farm"
+      },
+      "properties": {
+        "availabilitySet": {
+          "id": "[concat(resourceId('Microsoft.Compute/availabilitySets/', variables('RdsBuildVMs')[copyIndex()].VMAvSet))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[variables('RdsBuildVMs')[copyIndex()].VMSize]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2016-Datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "osType": "Windows",
+            "name": "[concat(variables('RdsBuildVMs')[copyIndex()].VMName,'_OsDisk')]",
+            "createOption": "FromImage",
+            "caching": "ReadWrite",
+            "managedDisk": {
+              "storageAccountType": "[variables('RdsBuildVMs')[copyIndex()].VmStorage]"
+            },
+            "diskSizeGB": "[variables('RdsBuildVMs')[copyIndex()].VmOSSize]"
+          },
+          "dataDisks": [
+            {
+              "name": "[concat(variables('RdsBuildVMs')[copyIndex()].VMName,'_DataDisk')]",
+              "lun": 0,
+              "createOption": "Empty",
+              "caching": "None",
+              "diskSizeGB": "[variables('RdsBuildVMs')[copyIndex()].VMDataSize]",
+              "managedDisk": {
+                "storageAccountType": "[variables('RdsBuildVMs')[copyIndex()].VmStorage]"
+              }
+            }
+          ]
+        },
+        "osProfile": {
+          "computerName": "[variables('RdsBuildVMs')[copyIndex()].VMName]",
+          "adminUsername": "[parameters('Admin_UserName')]",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "adminPassword": "[parameters('Admin_Password')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[concat(resourceId('Microsoft.Network/networkInterfaces/', variables('RdsBuildVMs')[copyIndex()].VMNic))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[parameters('Monitor_Storage_url')]"
+          }
+        },
+        "licenseType": "[parameters('Hybrid_Use_Benifit')]"
+      },
+      "dependsOn": [
+        "AVSetCopy",
+        "RdsBuildNicCopy",
+        "RdsIlbNicCopy"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('RdsIlbBuildVMs')[copyIndex()].VMName]",
+      "apiVersion": "2017-03-30",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "RdsVmCopy",
+        "count": "[length(variables('RdsIlbBuildVMs'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "RDS LB VMs"
+      },
+      "properties": {
+        "availabilitySet": {
+          "id": "[concat(resourceId('Microsoft.Compute/availabilitySets/', variables('RdsIlbBuildVMs')[copyIndex()].VMAvSet))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[variables('RdsIlbBuildVMs')[copyIndex()].VMSize]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2016-Datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "osType": "Windows",
+            "name": "[concat(variables('RdsIlbBuildVMs')[copyIndex()].VMName,'_OsDisk')]",
+            "createOption": "FromImage",
+            "caching": "ReadWrite",
+            "managedDisk": {
+              "storageAccountType": "[variables('RdsIlbBuildVMs')[copyIndex()].VmStorage]"
+            },
+            "diskSizeGB": "[variables('RdsIlbBuildVMs')[copyIndex()].VmOSSize]"
+          },
+          "dataDisks": [
+            {
+              "name": "[concat(variables('RdsIlbBuildVMs')[copyIndex()].VMName,'_DataDisk')]",
+              "lun": 0,
+              "createOption": "Empty",
+              "caching": "None",
+              "diskSizeGB": "[variables('RdsIlbBuildVMs')[copyIndex()].VMDataSize]",
+              "managedDisk": {
+                "storageAccountType": "[variables('RdsIlbBuildVMs')[copyIndex()].VmStorage]"
+              }
+            }
+          ]
+        },
+        "osProfile": {
+          "computerName": "[variables('RdsIlbBuildVMs')[copyIndex()].VMName]",
+          "adminUsername": "[parameters('Admin_UserName')]",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "adminPassword": "[parameters('Admin_Password')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[concat(resourceId('Microsoft.Network/networkInterfaces/', variables('RdsIlbBuildVMs')[copyIndex()].VMNic))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[parameters('Monitor_Storage_url')]"
+          }
+        },
+        "licenseType": "[parameters('Hybrid_Use_Benifit')]"
+      },
+      "dependsOn": [
+        "AVSetCopy",
+        "RdsBuildNicCopy",
+        "RdsIlbNicCopy"
+
+      ]
+    },
+    {
+      "type": "Microsoft.Sql/servers",
+      "name": "[variables('SQLInfo').SQLName]",
+      "apiVersion": "2014-04-01-preview",
+      "location": "[parameters('location')]",
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "RDS Azure SQL"
+      },
+      "properties": {
+        "administratorLogin": "[parameters('SQLAdmin_UserName')]",
+        "administratorLoginPassword": "[parameters('SQLAdmin_Password')]"
+      },
+      "dependsOn": [
+
+      ],
+      "resources": [
+        {
+          "type": "firewallrules",
+          "name": "RDSAzureSQLFirewallRules",
+          "apiVersion": "2014-04-01-preview",
+          "location": "[parameters('location')]",
+          "properties": {
+            "startIpAddress": "[variables('SQLInfo').SQLFirewallStart]",
+            "endIpAddress": "[variables('SQLInfo').SQLFirewallEnd]"
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('SQLInfo').SQLName)]"
+          ]
+        },
+        {
+          "type": "databases",
+          "name": "[variables('SQLInfo').SQLDatabaseName]",
+          "apiVersion": "2014-04-01-preview",
+          "location": "[parameters('location')]",
+          "tags": {
+            "Department": "[parameters('Tags_Department')]",
+            "Application": "[parameters('Tags_Application')]",
+            "CostCenter": "[parameters('Tags_CostCenter')]",
+            "displayName": "RDS SQL Database"
+          },
+          "properties": {
+            "collation": "[variables('SQLInfo').SQLCollation]",
+            "edition": "[variables('SQLInfo').SQLEdition]",
+            "maxSizeBytes": "1073741824",
+            "requestedServiceObjectiveName": "[variables('SQLInfo').SQLRequestedServiceObjectiveName]"
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('SQLInfo').SQLName)]"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('JoinVMs')[copyIndex()].VMName, '/joinDomain')]",
+      "apiVersion": "2017-12-01",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "JoinDomainCopy",
+        "count": "[length(variables('JoinVMs'))]"
+      },
+      "tags": {
+        "displayName": "Join Domain"
+      },
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "JsonADDomainExtension",
+        "typeHandlerVersion": "1.3",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "Name": "[parameters('DomainFQDN')]",
+          "User": "[parameters('JoinUser')]",
+          "Restart": "true",
+          "Options": "3"
+        },
+        "protectedSettings": {
+          "Password": "[parameters('Admin_Password')]"
+        }
+      },
+      "dependsOn": [
+        "RdsIlbVmCopy",
+        "RdsVmCopy"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('Client_Prefix'), 'RDSwa00/RDSwainstall')]",
+      "apiVersion": "2015-06-15",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "RDS WebAccess DSC"
+      },
+      "properties": {
+        "publisher": "Microsoft.Powershell",
+        "type": "DSC",
+        "typeHandlerVersion": "2.19",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "modulesUrl": "[parameters('DSC_rds_1_configuration_url')]",
+          "configurationFunction": "Configuration.ps1\\Gateway",
+          "Properties": {
+            "DomainName": "[parameters('DomainFQDN')]",
+            "AdminCreds": {
+              "UserName": "[parameters('Admin_UserName')]",
+              "Password": "PrivateSettingsRef:AdminPassword"
+            }
+          }
+        },
+        "protectedSettings": {
+          "Items": {
+            "AdminPassword": "[parameters('Admin_Password')]"
+          }
+        }
+      },
+      "dependsOn": [
+        "joinDomainCopy"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('RdsShInfo')[copyIndex()].VMName, '/RDSshinstall')]",
+      "apiVersion": "2015-06-15",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "RdsShDsc",
+        "count": "[length(variables('RdsShInfo'))]"
+      },
+      "tags": {
+        "displayName": "RDS SessionHost DSC"
+      },
+      "properties": {
+        "publisher": "Microsoft.Powershell",
+        "type": "DSC",
+        "typeHandlerVersion": "2.19",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "modulesUrl": "[parameters('DSC_rds_1_configuration_url')]",
+          "configurationFunction": "Configuration.ps1\\SessionHost",
+          "Properties": {
+            "DomainName": "[parameters('DomainFQDN')]",
+            "AdminCreds": {
+              "UserName": "[parameters('Admin_UserName')]",
+              "Password": "PrivateSettingsRef:AdminPassword"
+            }
+          }
+        },
+        "protectedSettings": {
+          "Items": {
+            "AdminPassword": "[parameters('Admin_Password')]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', parameters('Client_Prefix'), 'RDSwa00','/extensions/RDSwainstall')]"
+
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('RdsLic00Hostname'), '/RDSlicinstall')]",
+      "apiVersion": "2015-06-15",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "RDS License DSC"
+      },
+      "properties": {
+        "publisher": "Microsoft.Powershell",
+        "type": "DSC",
+        "typeHandlerVersion": "2.19",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "modulesUrl": "[parameters('DSC_rds_1_configuration_url')]",
+          "configurationFunction": "Configuration.ps1\\RDSlicDeployment",
+          "Properties": {
+            "adminCreds": {
+              "UserName": "[parameters('Admin_UserName')]",
+              "Password": "PrivateSettingsRef:AdminPassword"
+            },
+            "domainName": "[parameters('DomainFQDN')]"
+          }
+        },
+        "protectedSettings": {
+          "Items": {
+            "AdminPassword": "[parameters('Admin_Password')]"
+          }
+        }
+      },
+      "dependsOn": [
+        "JoinDomainCopy",
+        "RdsShDsc"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('RdsCb00Hostname'), '/RDScbinstall')]",
+      "apiVersion": "2015-06-15",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "RDS Connection DSC"
+      },
+      "properties": {
+        "publisher": "Microsoft.Powershell",
+        "type": "DSC",
+        "typeHandlerVersion": "2.19",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "modulesUrl": "[parameters('DSC_rds_1_configuration_url')]",
+          "configurationFunction": "Configuration.ps1\\RDSDeployment",
+          "Properties": {
+            "adminCreds": {
+              "UserName": "[parameters('Admin_UserName')]",
+              "Password": "PrivateSettingsRef:AdminPassword"
+            },
+            "domainName": "[parameters('DomainFQDN')]",
+            //"externalfqdn": "[reference('RDS-WA-ILB').frontendIPConfigurations.privateIPAddress]",
+            "numberOfRdshInstances": "4",
+            "sessionHostNamingPrefix": "[concat(parameters('Client_Prefix'), 'RDSsh0')]",
+            "connectionBroker": "[concat(parameters('Client_Prefix'), 'RDScb00',  '.', parameters('DomainFQDN'))]",
+            "webAccessServer": "[concat(parameters('Client_Prefix'), 'RDSwa00',  '.', parameters('DomainFQDN'))]",
+            "rdslicServer": "[concat(parameters('Client_Prefix'), 'RDSlic00', '.', parameters('DomainFQDN'))]"
+          }
+        },
+        "protectedSettings": {
+          "Items": {
+            "AdminPassword": "[parameters('Admin_Password')]"
+          }
+        }
+      },
+      "dependsOn": [
+        "RdsShDsc"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('RdsWa01Hostname'), '/RDSwainstall')]",
+      "apiVersion": "2015-06-15",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "RDSwa HA Install"
+      },
+      "properties": {
+        "publisher": "Microsoft.Powershell",
+        "type": "DSC",
+        "typeHandlerVersion": "2.19",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "modulesUrl": "[parameters('DSC_rds_1_configuration_url')]",
+          "configurationFunction": "Configuration.ps1\\Gateway",
+          "Properties": {
+            "DomainName": "[parameters('DomainFQDN')]",
+            "AdminCreds": {
+              "UserName": "[parameters('Admin_UserName')]",
+              "Password": "PrivateSettingsRef:AdminPassword"
+            }
+          }
+        },
+        "protectedSettings": {
+          "Items": {
+            "AdminPassword": "[parameters('Admin_Password')]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('RdsCb00Hostname'),'/extensions/RDScbinstall')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('RdsWa01Hostname'), '/WebAndGwFarmAdd_PostConfig1.1')]",
+      "apiVersion": "2015-06-15",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "RDSwa HA Config"
+      },
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "CustomScriptExtension",
+        "typeHandlerVersion": "1.8",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": [
+            "[parameters('Scripts_rds_2_web_gw_postconfig_url')]"
+          ]
+        },
+        "protectedSettings": {
+          "Items": { "AdminPassword": "[parameters('Admin_Password')]" },
+          "commandToExecute": "[variables('HAWebAccesscommandToExecute')]"
+        }
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('RdsWa01Hostname'),'/extensions/RDSwainstall')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('RdsCb01Hostname'), '/RDScbinstall')]",
+      "apiVersion": "2015-06-15",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "RDScb HA Install"
+      },
+      "properties": {
+        "publisher": "Microsoft.Powershell",
+        "type": "DSC",
+        "typeHandlerVersion": "2.19",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "modulesUrl": [ "parameters('DSC_rds_1_configuration_url')" ],
+          "configurationFunction": "Configuration.ps1\\HABrokerDeployment",
+          "Properties": {
+            "adminCreds": {
+              "UserName": "[parameters('Admin_UserName')]",
+              "Password": "PrivateSettingsRef:AdminPassword"
+            },
+            "domainName": "[parameters('DomainFQDN')]"
+          }
+        },
+        "protectedSettings": {
+          "Items": {
+            "AdminPassword": "[parameters('Admin_Password')]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('RdsWa01Hostname'),'/extensions/WebAndGwFarmAdd_PostConfig1.1')]"
+      ]
+    },
+    {
+      "name": "[concat(variables('RdsCb00Hostname'), '/ConnectionBroker_HA')]",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "apiVersion": "2015-06-15",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "RDScb HA Config"
+      },
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "CustomScriptExtension",
+        "typeHandlerVersion": "1.8",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": [
+            "[parameters('Scripts_rds_1_connectionbroker_ha_url')]"
+          ]
+        },
+        "protectedSettings": {
+          "Items": { "AdminPassword": "[parameters('Admin_Password')]" },
+          "commandToExecute": "[variables('HABrokercommandToExecute')]"
+        }
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('RdsCb01Hostname'),'/extensions/RDScbinstall')]"
+      ]
+    }
+  ],
+  "outputs": {
+
+  }
+}

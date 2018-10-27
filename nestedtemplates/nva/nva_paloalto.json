@@ -1,0 +1,592 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Admin_UserName": {
+      "type": "string"
+    },
+    "Admin_Password": {
+      "type": "string"
+    },
+    "Auth_sshPublicKey": {
+      "type": "string"
+    },
+    "Auth_authenticationType": {
+      "type": "string"
+    },
+    "Client_Prefix": {
+      "type": "string"
+    },
+    "DomainName": {
+      "type": "string"
+    },
+    "IPAddress_Space": {
+      "type": "string"
+    },
+    "Location": {
+      "type": "string"
+    },
+    "Tags_Application": {
+      "type": "string"
+    },
+    "Tags_CostCenter": {
+      "type": "string"
+    },
+    "Tags_Department": {
+      "type": "string"
+    },
+    "Tags_Environment": {
+      "type": "string"
+    },
+    "vNETRef_Hub": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "applicationGatewayID": "[resourceId('Microsoft.Network/applicationGateways', concat(parameters('Client_Prefix'), 'NvaAppGW'))]",
+    "publicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses/', concat(parameters('Client_Prefix'), 'NvaAppGWPIP'))]",
+    "AVSetInfo": [
+      {
+        "AVSetName": "[concat(parameters('Client_Prefix'), 'AVSetNva')]"
+      }
+    ],
+    "VMInfo": [
+      {
+        "VM_Name": "[concat(parameters('Client_Prefix'), 'NVA00')]",
+        "VM_Size": "Standard_D3_v2",
+        "VM_AvSet": "[concat(parameters('Client_Prefix'), 'AVSetNva')]",
+        "Vm_Nva_Nic_Mgt": "[concat(parameters('Client_Prefix'), 'NVA00', '-Eth0')]",
+        "Vm_Nva_IP_Mgt": "[concat(parameters('IPAddress_Space'), '.0.68')]",
+        "Vm_Nva_Subnet_Mgt": "[concat(parameters('vNETRef_Hub'), '/subnets/nvaManagement')]",
+        "Vm_Nva_Nic_Untrust": "[concat(parameters('Client_Prefix'), 'NVA00', '-Eth1')]",
+        "Vm_Nva_IP_Untrust": "[concat(parameters('IPAddress_Space'), '.0.100')]",
+        "Vm_Nva_Subnet_Untrust": "[concat(parameters('vNETRef_Hub'), '/subnets/nvaUntrusted')]",
+        "Vm_Nva_Nic_Trust": "[concat(parameters('Client_Prefix'), 'NVA00', '-Eth2')]",
+        "Vm_Nva_IP_Trust": "[concat(parameters('IPAddress_Space'), '.0.116')]",
+        "Vm_Nva_Subnet_Trust": "[concat(parameters('vNETRef_Hub'), '/subnets/nvaTrusted')]",
+        "VM_DiskName": "[concat('https', '://', parameters('Client_Prefix'),'nva01', '.blob.core.windows.net', concat('/vhds/', 'NVA00','-osdisk.vhd'))]",
+        "VM_Plan_Name": "byol",
+        "VM_Plan_Product": "vmseries1",
+        "VM_Plan_Publisher": "paloaltonetworks"
+      },
+      {
+        "VM_Name": "[concat(parameters('Client_Prefix'), 'NVA01')]",
+        "VM_Size": "Standard_D3_v2",
+        "VM_AvSet": "[concat(parameters('Client_Prefix'), 'AVSetNva')]",
+        "Vm_Nva_Nic_Mgt": "[concat(parameters('Client_Prefix'), 'NVA01', '-Eth0')]",
+        "Vm_Nva_IP_Mgt": "[concat(parameters('IPAddress_Space'), '.0.69')]",
+        "Vm_Nva_Subnet_Mgt": "[concat(parameters('vNETRef_Hub'), '/subnets/nvaManagement')]",
+        "Vm_Nva_Nic_Untrust": "[concat(parameters('Client_Prefix'), 'NVA01', '-Eth1')]",
+        "Vm_Nva_IP_Untrust": "[concat(parameters('IPAddress_Space'), '.0.101')]",
+        "Vm_Nva_Subnet_Untrust": "[concat(parameters('vNETRef_Hub'), '/subnets/nvaUntrusted')]",
+        "Vm_Nva_Nic_Trust": "[concat(parameters('Client_Prefix'), 'NVA01', '-Eth2')]",
+        "Vm_Nva_IP_Trust": "[concat(parameters('IPAddress_Space'), '.0.117')]",
+        "Vm_Nva_Subnet_Trust": "[concat(parameters('vNETRef_Hub'), '/subnets/nvaTrusted')]",
+        "VM_DiskName": "[concat('https', '://', parameters('Client_Prefix'),'nva01', '.blob.core.windows.net', concat('/vhds/', 'NVA01','-osdisk.vhd'))]",
+        "VM_Plan_Name": "byol",
+        "VM_Plan_Product": "vmseries1",
+        "VM_Plan_Publisher": "paloaltonetworks"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('AVSetInfo')[copyIndex()].AVSetName]",
+      "apiVersion": "2016-04-30-preview",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "AVSetCopy",
+        "count": "[length(variables('AVSetInfo'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "Nva AVSet"
+      },
+      "properties": {
+        "platformUpdateDomainCount": 20,
+        "platformFaultDomainCount": 2
+      },
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[concat(parameters('Client_Prefix'), 'NVAMgt-NSG')]",
+      "apiVersion": "2017-06-01",
+      "location": "[parameters('Location')]",
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "Nva NSG"
+      },
+      "properties": {
+        "securityRules": [
+          {
+            "name": "Allow-Outside-From-IP",
+            "properties": {
+              "description": "Rule",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "0.0.0.0/0",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound",
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "Allow-Intra",
+            "properties": {
+              "description": "Allow intra network traffic",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "10.0.0.0/16",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 101,
+              "direction": "Inbound",
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "Default-Deny",
+            "properties": {
+              "description": "Default-Deny if we don't match Allow rule",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 200,
+              "direction": "Inbound",
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('VMInfo')[copyIndex()].Vm_Nva_Nic_Mgt]",
+      "apiVersion": "2017-03-01",
+      "location": "[parameters('location')]",
+      "copy": {
+        "Name": "NvaMgtCopy",
+        "count": "[length(variables('VMInfo'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "Nva MGT NIC"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[variables('VMInfo')[copyIndex()].Vm_Nva_IP_Mgt]",
+              "subnet": {
+                "id": "[variables('VMInfo')[copyIndex()].Vm_Nva_Subnet_Mgt]"
+              }
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('Client_Prefix'), 'NVAMgt-NSG'))]"
+        },
+        "enableIPForwarding": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups/', concat(parameters('Client_Prefix'), 'NVAMgt-NSG'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('VMInfo')[copyIndex()].Vm_Nva_Nic_Untrust]",
+      "apiVersion": "2017-03-01",
+      "location": "[parameters('location')]",
+      "copy": {
+        "Name": "NvaUntrustCopy",
+        "count": "[length(variables('VMInfo'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "Nva Untrust NIC"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[variables('VMInfo')[copyIndex()].Vm_Nva_IP_Untrust]",
+              "subnet": {
+                "id": "[variables('VMInfo')[copyIndex()].Vm_Nva_Subnet_Untrust]"
+              }
+            }
+          }
+        ],
+        "enableIPForwarding": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups/', concat(parameters('Client_Prefix'), 'NVAMgt-NSG'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('VMInfo')[copyIndex()].Vm_Nva_Nic_Trust]",
+      "apiVersion": "2017-03-01",
+      "location": "[parameters('location')]",
+      "copy": {
+        "Name": "NvaTrustCopy",
+        "count": "[length(variables('VMInfo'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "Nva Trust NIC"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[variables('VMInfo')[copyIndex()].Vm_Nva_IP_Trust]",
+              "subnet": {
+                "id": "[variables('VMInfo')[copyIndex()].Vm_Nva_Subnet_Trust]"
+              }
+            }
+          }
+        ],
+        "enableIPForwarding": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups/', concat(parameters('Client_Prefix'), 'NVAMgt-NSG'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(parameters('Client_Prefix'), 'NvaAppGWPIP')]",
+      "apiVersion": "2017-10-01",
+      "location": "[parameters('location')]",
+      "copy": {
+        "Name": "PIPCopy",
+        "count": 1
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "Nva Public IP"
+      },
+      "sku": {
+        "name": "basic"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "publicIPAddressVersion": "IPv4",
+        "dnsSettings": {
+          "fqdn": "[concat(parameters('Client_Prefix'), parameters('domainName'), parameters('Location'), '.cloudapp.net')]",
+          "domainNameLabel": "[concat(parameters('Client_Prefix'), parameters('domainName'))]"
+        }
+      },
+      "dependsOn": [
+        "NvaTrustCopy"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/applicationGateways",
+      "name": "[concat(parameters('Client_Prefix'), 'NvaAppGW')]",
+      "apiVersion": "2017-06-01",
+      "location": "[parameters('location')]",
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "Nva AppGateway"
+      },
+      "properties": {
+        "sku": {
+          "name": "WAF_Medium",
+          "tier": "WAF",
+          "capacity": "2"
+        },
+        "gatewayIPConfigurations": [
+          {
+            "name": "appGatewayIpConfig",
+            "properties": {
+              "subnet": {
+                "id": "[concat(parameters('vNETRef_Hub'), '/subnets/Tools')]"
+              }
+            }
+          }
+        ],
+        "frontendIPConfigurations": [
+          {
+            "name": "appGatewayFrontendIP",
+            "properties": {
+              "PublicIPAddress": {
+                "id": "[variables('publicIPRef')]"
+              }
+            }
+          }
+        ],
+        "frontendPorts": [
+          {
+            "name": "appGatewayFrontendPort",
+            "properties": {
+              "Port": 80
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "appGatewayBackendPool",
+            "properties": {
+              "backendAddresses": [
+                {
+                  "ipAddress": "[concat(parameters('IPAddress_Space'), '.0.69')]"
+                },
+                {
+                  "ipAddress": "[concat(parameters('IPAddress_Space'), '.0.70')]"
+                }
+              ],
+              "requestRoutingRules": [
+                {
+                  "id": "[concat(variables('applicationGatewayID'), '/requestRoutingRules/rule1')]"
+                }
+              ]
+            }
+          }
+        ],
+        "backendHttpSettingsCollection": [
+          {
+            "name": "appGatewayBackendHttpSettings",
+            "properties": {
+              "Port": 80,
+              "Protocol": "Http",
+              "CookieBasedAffinity": "Disabled"
+            }
+          }
+        ],
+        "httpListeners": [
+          {
+            "name": "appGatewayHttpListener",
+            "properties": {
+              "FrontendIPConfiguration": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
+              },
+              "FrontendPort": {
+                "id": "[concat(variables('applicationGatewayID'), '/frontendPorts/appGatewayFrontendPort')]"
+              },
+              "Protocol": "Http",
+              "SslCertificate": null
+            }
+          }
+        ],
+        "requestRoutingRules": [
+          {
+            "Name": "rule1",
+            "properties": {
+              "RuleType": "Basic",
+              "httpListener": {
+                "id": "[concat(variables('applicationGatewayID'), '/httpListeners/appGatewayHttpListener')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/appGatewayBackendPool')]"
+              },
+              "backendHttpSettings": {
+                "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
+              }
+            }
+          }
+        ],
+        "sslCertificates": [
+
+        ],
+        "webApplicationFirewallConfiguration": {
+          "enabled": true,
+          "firewallMode": "Prevention",
+          "ruleSetType": "OWASP",
+          "ruleSetVersion": "3.0"
+        }
+      },
+      "dependsOn": [
+        "VMCopy",
+        "PIPCopy"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('VMInfo')[copyIndex()].VM_Name]",
+      "apiVersion": "2017-03-30",
+      "location": "[parameters('Location')]",
+      "plan": {
+        "name": "[variables('VMInfo')[copyIndex()].VM_Plan_Name]",
+        "product": "[variables('VMInfo')[copyIndex()].VM_Plan_Product]",
+        "publisher": "[variables('VMInfo')[copyIndex()].VM_Plan_Publisher]"
+      },
+      "copy": {
+        "name": "VMCopy",
+        "count": "[length(variables('VMInfo'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "Nva VMs"
+      },
+      "properties": {
+        "availabilitySet": {
+          "id": "[concat(resourceId('Microsoft.Compute/availabilitySets/', variables('VMInfo')[copyIndex()].VM_AvSet))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[variables('VMInfo')[copyIndex()].VM_Size]"
+        },
+        "osProfile": {
+          "computerName": "[variables('VMInfo')[copyIndex()].VM_Name]",
+          "adminUsername": "[parameters('Admin_UserName')]",
+          "adminPassword": "[parameters('Admin_Password')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": false
+          },
+          "secrets": [
+
+          ]
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('VMInfo')[copyIndex()].VM_Plan_Publisher]",
+            "offer": "[variables('VMInfo')[copyIndex()].VM_Plan_Product]",
+            "sku": "[variables('VMInfo')[copyIndex()].VM_Plan_Name]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "osType": "Linux",
+            "name": "osdisk",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[variables('VMInfo')[copyIndex()].VM_DiskName]"
+            },
+            "caching": "ReadWrite",
+            "diskSizeGB": 60
+          },
+          "dataDisks": [
+
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "properties": {
+                "primary": true
+              },
+              "id": "[concat(resourceId('Microsoft.Network/networkInterfaces', variables('VMInfo')[copyIndex()].Vm_Nva_Nic_Mgt))]"
+            },
+            {
+              "properties": {
+                "primary": false
+              },
+              "id": "[concat(resourceId('Microsoft.Network/networkInterfaces', variables('VMInfo')[copyIndex()].Vm_Nva_Nic_Untrust))]"
+            },
+            {
+              "properties": {
+                "primary": false
+              },
+              "id": "[concat(resourceId('Microsoft.Network/networkInterfaces', variables('VMInfo')[copyIndex()].Vm_Nva_Nic_Trust))]"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "NvaMgtCopy",
+        "NvaUntrustCopy",
+        "NvaTrustCopy",
+        "[concat(resourceId('Microsoft.Compute/availabilitySets/', variables('VMInfo')[copyIndex()].VM_AvSet))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "[concat(parameters('Client_Prefix'), 'NvaWebILB')]",
+      "apiVersion": "2017-10-01",
+      "location": "[parameters('Location')]",
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "Nva Web ILB"
+      },
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "LoadBalancerFrontEnd",
+            "properties": {
+              "privateIPAddress": "[concat(parameters('IPAddress_Space'), '.0.118')]",
+              "privateIPAllocationMethod": "Static",
+              "subnet": {
+                "id": "[concat(parameters('vNETRef_Hub'), '/subnets/nvaTrusted')]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+
+        ],
+        "loadBalancingRules": [
+
+        ],
+        "probes": [
+
+        ],
+        "inboundNatRules": [
+
+        ],
+        "outboundNatRules": [
+
+        ],
+        "inboundNatPools": [
+
+        ]
+      },
+      "dependsOn": [
+        "VMCopy"
+      ]
+    }
+  ],
+  "outputs": {
+
+  }
+}

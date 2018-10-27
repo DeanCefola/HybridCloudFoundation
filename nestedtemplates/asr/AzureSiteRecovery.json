@@ -1,0 +1,437 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "ASR-VaultName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of ASR Vault"
+      }
+    },
+    "ASR-ReplicationPolicyName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of ASR Replication Policy"
+      }
+    },
+    "Source-Location": {
+      "type": "string",
+      "allowedValues": [
+        "eastus",
+        "eastus2"
+      ]
+    },
+    "Source-RG-Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Enter Name of the Source Resource Group"
+      }
+    },
+    "Source-vNET-Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Enter Name of the Source Virtual Network"
+      }
+    },
+    "DR-Location": {
+      "type": "string",
+      "allowedValues": [
+        "westus",
+        "westus2"
+      ]
+    },
+    "DR-RG-Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Enter Name of the DR Resource Group"
+      }
+    },
+    "DR-vNET-Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Enter Name of the DR Virtual Network"
+      }
+    }
+  },
+  "variables": {
+    "ASR-Group": [
+      {
+        "AVSetName": "Web-Group1"
+      },
+      {
+        "AVSetName": "App-Group1"
+      },
+      {
+        "AVSetName": "Database-Group1"
+      },
+      {
+        "AVSetName": "Jump-Group1"
+      }
+    ],
+    "AVSetInfo": [
+      {
+        "AVSetName": "AVSetJump"
+      },
+      {
+        "AVSetName": "AVSetWeb"
+      },
+      {
+        "AVSetName": "AVSetApp"
+      },
+      {
+        "AVSetName": "AVSetDatabase"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "AA-ASR-Account",
+      "apiVersion": "2017-05-10",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/asr-automation-recovery/azuredeploy.json"
+        },
+        "parameters": {
+          "automationAccountName": {
+            "value": "AA-ASR-Account"
+          },
+          "automationRegion": {
+            "value": "westcentralus"
+          },
+          "_artifactsLocation": {
+            "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/asr-automation-recovery"
+          }
+
+        }
+      },
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('AVSetInfo')[copyIndex()].AVSetName]",
+      "apiVersion": "2016-04-30-preview",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "AVSetCopy",
+        "count": "[length(variables('AVSetInfo'))]"
+      },
+      "tags": {
+        "displayName": "Availability Set"
+      },
+      "sku": {
+        "name": "Aligned"
+      },
+      "properties": {
+        "platformUpdateDomainCount": 5,
+        "platformFaultDomainCount": 2
+      },
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[concat('asrcache', uniqueString(resourceGroup().id))]",
+      "apiVersion": "2016-01-01",
+      "location": "[parameters('Source-Location')]",
+      "copy": {
+        "name": "ASR-Cache-Copy",
+        "count": 1
+      },
+      "tags": {
+        "displayName": "ASR-DR-Cache"
+      },
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "Storage",
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults",
+      "apiVersion": "2016-06-01",
+      "name": "[parameters('ASR-VaultName')]",
+      "location": "[parameters('DR-Location')]",
+      "copy": {
+        "name": "ASR-Vault-Copy",
+        "count": 1
+      },
+      "tags": {
+        "displayName": "ASR-Vault"
+      },
+      "sku": {
+        "name": "RS0",
+        "tier": "Standard"
+      },
+      "properties": {
+      }
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults/replicationPolicies",
+      "name": "[concat(parameters('ASR-VaultName'),'/',parameters('ASR-ReplicationPolicyName'))]",
+      "apiVersion": "2018-01-10",
+      "copy": {
+        "name": "ASR-Rep-Policy-Copy",
+        "count": 1
+      },
+      "tags": {
+        "displayName": "ASR-Rep-Policy"
+      },
+      "properties": {
+        "providerSpecificInput": {
+          "instanceType": "A2A",
+          "appConsistentFrequencyInMinutes": 240,
+          "crashConsistentFrequencyInMinutes": 5,
+          "multiVmSyncStatus": "Enable",
+          "recoveryPointHistory": 1440
+        }
+      },
+      "dependsOn": [
+        "ASR-Vault-Copy"
+      ]
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults/replicationFabrics",
+      "name": "[concat(parameters('ASR-VaultName'),'/asr-a2a-default-',parameters('Source-Location'))]",
+      "apiVersion": "2018-01-10",
+      "copy": {
+        "name": "ASR-Rep-Fabric-Source-Copy",
+        "count": 1
+      },
+      "tags": {
+        "displayName": "ASR-Rep-Fabric-Source"
+      },
+      "properties": {
+        "customDetails": {
+          "instanceType": "Azure",
+          "location": "[parameters('Source-Location')]"
+        }
+      },
+      "dependsOn": [
+        "ASR-Vault-Copy"
+      ]
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults/replicationFabrics",
+      "name": "[concat(parameters('ASR-VaultName'),'/asr-a2a-default-',parameters('DR-Location'))]",
+      "apiVersion": "2018-01-10",
+      "copy": {
+        "name": "ASR-Rep-Fabric-DR-Copy",
+        "count": 1
+      },
+      "tags": {
+        "displayName": "ASR-Rep-Fabric-DR"
+      },
+      "properties": {
+        "customDetails": {
+          "instanceType": "Azure",
+          "location": "[parameters('DR-Location')]"
+        }
+      },
+      "dependsOn": [
+        "ASR-Rep-Fabric-Source-Copy"
+      ]
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults/replicationFabrics/replicationProtectionContainers",
+      "name": "[concat(parameters('ASR-VaultName'),'/asr-a2a-default-',parameters('Source-Location'),'/asr-a2a-default-',parameters('Source-Location'),'-container')]",
+      "apiVersion": "2018-01-10",
+      "copy": {
+        "name": "ASR-Rep-Container-Source-Copy",
+        "count": 1
+      },
+      "tags": {
+        "displayName": "ASR-Rep-Container-Source"
+      },
+      "properties": {
+        "providerSpecificDetails": [
+          {
+            "instanceType": "A2A"
+          }
+        ]
+      },
+      "dependsOn": [
+        "ASR-Rep-Fabric-Source-Copy",
+        "ASR-Rep-Fabric-DR-Copy"
+      ]
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults/replicationFabrics/replicationProtectionContainers",
+      "name": "[concat(parameters('ASR-VaultName'),'/asr-a2a-default-',parameters('DR-Location'),'/asr-a2a-default-',parameters('DR-Location'),'-container')]",
+      "apiVersion": "2018-01-10",
+      "copy": {
+        "name": "ASR-Rep-Container-DR-Copy",
+        "count": 1
+      },
+      "tags": {
+        "displayName": "ASR-Rep-Container-DR"
+      },
+      "properties": {
+        "providerSpecificDetails": [
+          {
+            "instanceType": "A2A"
+          }
+        ]
+      },
+      "dependsOn": [
+        "ASR-Rep-Fabric-Source-Copy",
+        "ASR-Rep-Fabric-DR-Copy"
+      ]
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults/replicationFabrics/replicationProtectionContainers/replicationProtectionContainerMappings",
+      "name": "[concat(parameters('ASR-VaultName'),'/asr-a2a-default-',parameters('Source-Location'),'/asr-a2a-default-',parameters('Source-Location'),'-container/',parameters('Source-Location'),'-',parameters('DR-Location'),'-',parameters('ASR-ReplicationPolicyName'))]",
+      "apiVersion": "2018-01-10",
+      "copy": {
+        "name": "ASR-Rep-Container-Map-Source-Copy",
+        "count": 1
+      },
+      "tags": {
+        "displayName": "ASR-Rep-Container-Map-Source"
+      },
+      "properties": {
+        "policyId": "[concat(subscription().id,'/resourceGroups/',parameters('Source-RG-Name'),'/providers/Microsoft.RecoveryServices/vaults/',parameters('DR-RG-Name'),'/replicationPolicies/',parameters('ASR-ReplicationPolicyName'))]",
+        "targetProtectionContainerId": "[concat(subscription().id,'/resourceGroups/',parameters('Source-RG-Name'),'/providers/Microsoft.RecoveryServices/vaults/',parameters('DR-RG-Name'),'/replicationFabrics/asr-a2a-default-',parameters('DR-Location'),'/replicationProtectionContainers/asr-a2a-default-',parameters('DR-Location'),'-container')]",
+        "providerSpecificInput": {
+          "instanceType": "ReplicationProviderSpecificContainerMappingInput"
+        }
+      },
+      "dependsOn": [
+        "ASR-Rep-Policy-Copy",
+        "ASR-Rep-Container-Source-Copy",
+        "ASR-Rep-Container-DR-Copy"
+      ]
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults/replicationFabrics/replicationProtectionContainers/replicationProtectionContainerMappings",
+      "name": "[concat(parameters('ASR-VaultName'),'/asr-a2a-default-',parameters('DR-Location'),'/asr-a2a-default-',parameters('DR-Location'),'-container/',parameters('DR-Location'),'-',parameters('Source-Location'),'-',parameters('ASR-ReplicationPolicyName'))]",
+      "apiVersion": "2018-01-10",
+      "copy": {
+        "name": "ASR-Rep-Container-Map-DR-Copy",
+        "count": 1
+      },
+      "tags": {
+        "displayName": "ASR-Rep-Container-Map-DR"
+      },
+      "properties": {
+        "policyId": "[concat(subscription().id,'/resourceGroups/',parameters('Source-RG-Name'),'/providers/Microsoft.RecoveryServices/vaults/',parameters('DR-RG-Name'),'/replicationPolicies/',parameters('ASR-ReplicationPolicyName'))]",
+        "targetProtectionContainerId": "[concat(subscription().id,'/resourceGroups/',parameters('Source-RG-Name'),'/providers/Microsoft.RecoveryServices/vaults/',parameters('DR-RG-Name'),'/replicationFabrics/asr-a2a-default-',parameters('Source-Location'),'/replicationProtectionContainers/asr-a2a-default-',parameters('Source-Location'),'-container')]",
+        "providerSpecificInput": {
+          "instanceType": "ReplicationProviderSpecificContainerMappingInput"
+        }
+      },
+      "dependsOn": [
+        "ASR-Rep-Policy-Copy",
+        "ASR-Rep-Container-Source-Copy",
+        "ASR-Rep-Container-DR-Copy",
+        "ASR-Rep-Container-Map-Source-Copy"
+      ]
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults/replicationFabrics/replicationNetworks/replicationNetworkMappings",
+      "name": "[concat(parameters('ASR-VaultName'),'/asr-a2a-default-',parameters('Source-Location'),'/azureNetwork/',parameters('Source-Location'),'-',parameters('DR-Location'),'-',parameters('Source-vNET-Name'))]",
+      "apiVersion": "2018-01-10",
+      "copy": {
+        "name": "ASR-Rep-vNET-Source-Copy",
+        "count": 1
+      },
+      "tags": {
+        "displayName": "ASR-Rep-vNET-Source"
+      },
+      "properties": {
+        "recoveryFabricName": "[concat('asr-a2a-default-',parameters('DR-Location'))]",
+        "recoveryNetworkId": "[concat(subscription().id,'/resourceGroups/',parameters('DR-RG-Name'),'/providers/Microsoft.Network/virtualNetworks/',parameters('DR-vNET-Name'))]",
+        "fabricSpecificDetails": {
+          "instanceType": "AzureToAzure",
+          "primaryNetworkId": "[concat(subscription().id,'/resourceGroups/',parameters('Source-RG-Name'),'/providers/Microsoft.Network/virtualNetworks/',parameters('Source-vNET-Name'))]"
+        }
+      },
+      "dependsOn": [
+        "ASR-Rep-Fabric-Source-Copy",
+        "ASR-Rep-Fabric-DR-Copy"
+
+      ]
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults/replicationFabrics/replicationNetworks/replicationNetworkMappings",
+      "name": "[concat(parameters('ASR-VaultName'),'/asr-a2a-default-',parameters('DR-Location'),'/azureNetwork/',parameters('DR-Location'),'-',parameters('Source-Location'),'-',parameters('DR-vNET-Name'))]",
+      "apiVersion": "2018-01-10",
+      "copy": {
+        "name": "ASR-Rep-vNET-DR-Copy",
+        "count": 1
+      },
+      "tags": {
+        "displayName": "ASR-Rep-vNET-DR"
+      },
+      "properties": {
+        "recoveryFabricName": "[concat('asr-a2a-default-',parameters('Source-Location'))]",
+        "recoveryNetworkId": "[concat(subscription().id,'/resourceGroups/',parameters('Source-RG-Name'),'/providers/Microsoft.Network/virtualNetworks/',parameters('Source-vNET-Name'))]",
+        "fabricSpecificDetails": {
+          "instanceType": "AzureToAzure",
+          "primaryNetworkId": "[concat(subscription().id,'/resourceGroups/',parameters('DR-RG-Name'),'/providers/Microsoft.Network/virtualNetworks/',parameters('DR-vNET-Name'))]"
+        }
+      },
+      "dependsOn": [
+        "ASR-Rep-Fabric-Source-Copy",
+        "ASR-Rep-Fabric-DR-Copy",
+        "ASR-Rep-vNET-Source-Copy"
+
+      ]
+    }
+
+
+    /*
+
+    {
+      "type": "Microsoft.RecoveryServices/vaults/replicationFabrics/replicationProtectionContainers/replicationProtectedItems",
+      "name": "[concat(parameters('ASR-VaultName'),'/asr-a2a-default-',parameters('Source-Location'),'/asr-a2a-default-',parameters('Source-Location'),'-container/','34191f7a-4371-5153-8d6d-230bd9169435')]",
+      "apiVersion": "2018-01-10",
+      "copy": {
+        "name": "ASR-ProtectVM-copy",
+        "count": 1
+      },
+      "properties": {
+        "policyId": "[concat(subscription().id,'/resourceGroups/',parameters('DR-RG-Name'),'/providers/Microsoft.RecoveryServices/vaults/',parameters('ASR-VaultName'), '/replicationPolicies/',parameters('ASR-ReplicationPolicyName'))]",
+        "protectableItemId": "",
+        "providerSpecificDetails": {
+          "instanceType": "A2A",
+          "fabricObjectId": "[resourceId(parameters('Source-RG-Name'),'Microsoft.Compute/virtualMachines', parameters('ProtectVMs'))]",
+          "recoveryResourceGroupId": "[concat(subscription().id, '/resourceGroups/',parameters('DR-RG-Name'))]",
+          "recoveryContainerId": "[concat(subscription().id,'/resourceGroups/',parameters('DR-RG-Name'),'/providers/Microsoft.RecoveryServices/vaults/',parameters('ASR-VaultName'), '/replicationFabrics/asr-a2a-default-', parameters('DR-RG-Name'), '/replicationProtectionContainers/asr-a2a-default-', parameters('DR-RG-Name'), '-container')]",
+          "vmDisks": [],
+          "vmManagedDisks": [
+            {
+              "diskId": "[concat(subscription().id,'/resourceGroups/',parameters('Source-RG-Name'),'/providers/Microsoft.Compute/disks/', parameters('ProtectVMs'),'-OSDisk')]",
+              "primaryStagingAzureStorageAccountId": "[concat(subscription().id,'/resourceGroups/',parameters('DR-RG-Name'),'/providers/microsoft.storage/storageaccounts/','asrcache',uniqueString(resourceGroup().id))]",
+              "recoveryResourceGroupId": "[concat(subscription().id, '/resourceGroups/',parameters('DR-RG-Name'))]",
+              "recoveryReplicaDiskAccountType": "Premium_LRS",
+              "recoveryTargetDiskAccountType": "Premium_LRS"
+            }
+          ],
+          "multiVmGroupName": "WebGroup1",
+          "recoveryAvailabilitySetId": "[concat(subscription().id,parameters('DR-RG-Name'),'Microsoft.Compute/availabilitySets','AVSetWeb-asr')]"
+        }
+      },
+      "dependsOn": [
+        "AVSetCopy",
+        "ASR-Rep-vNET-Source-Copy",
+        "ASR-Rep-vNET-DR-Copy",
+        "ASR-Rep-Container-Source-Copy",
+        "ASR-Rep-Container-DR-Copy"
+      ]
+    }
+
+    */
+
+
+  ],
+  "outputs": {
+
+  }
+}

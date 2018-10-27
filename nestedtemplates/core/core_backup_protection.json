@@ -1,0 +1,38 @@
+﻿{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "VMName": {
+      "type": "string"
+    },
+    "VM_RGName": {
+      "type": "string"
+    },
+    "vaultName": {
+      "type": "string"
+    },
+    "Compliance": {
+      "type": "string"
+    },
+    "Subscription_ID": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "protectionContainers": "[concat('iaasvmcontainer;iaasvmcontainerv2;',parameters('VM_RGName'),';',parameters('VMName'))]",
+    "protectedItems": "[concat('vm;iaasvmcontainerv2;',parameters('VM_RGName'),';',parameters('VMName'))]",
+    "sourceResourceIds": "[concat('/subscriptions/',parameters('Subscription_ID'),'/resourceGroups/',parameters('VM_RGName'),'/providers/Microsoft.Compute/virtualMachines/',parameters('VMName'))]"
+  },
+   "resources": [
+    {
+      "type": "Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems",
+      "name": "[concat(parameters('vaultName'), '/Azure/',variables('protectionContainers'), '/', variables('protectedItems'))]",
+      "apiVersion": "2016-06-01",
+      "properties": {
+        "protectedItemType": "Microsoft.ClassicCompute/virtualMachines",
+        "policyId": "[resourceId('Microsoft.RecoveryServices/vaults/backupPolicies', parameters('vaultName'), parameters('Compliance'))]",
+        "sourceResourceId": "[variables('sourceResourceIds')]"
+      }
+    }
+    ]
+}

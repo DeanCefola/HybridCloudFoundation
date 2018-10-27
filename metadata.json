@@ -1,0 +1,8 @@
+﻿{
+  "itemDisplayName": "Azure Hybrid Cloud Foundation Offering",
+  "description": "Master deployment template with multiple nested templates to deploy shared services:",
+  "Services-Installed":  "vNET, storage, NVA Firewall, Domain, DFS, RDSFarm",
+  "summary": "HCF will deploy Azure Reference architecture for Azure foundation",
+  "githubUsername": "drcefola",
+  "dateUpdated": "2018-05-01"  
+}

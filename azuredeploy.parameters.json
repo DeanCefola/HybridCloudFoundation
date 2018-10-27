@@ -1,0 +1,98 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Client_Prefix": {
+      "value": "zx9"
+    },
+    "Admin_UserName": {
+      "value": "lntad"
+    },
+    "Auth_authenticationType": {
+      "value": "password"
+    },
+    "backupPolicyName": {
+      "value": "PCI"
+    },
+    "DomainExtension": {
+      "value": ".org"
+    },
+    "DomainName": {
+      "value": "AzureAcademy"
+    },
+    "IPAddress_Space": {
+      "value": "172.16"
+    },
+    "SQLAdmin_UserName": {
+      "value": "sqladmin"
+    },
+    "Tags_Application": {
+      "value": "WebDemo"
+    },
+    "Tags_CostCenter": {
+      "value": "zx9-money"
+    },
+    "Tags_Department": {
+      "value": "AppDepo"
+    },
+    "Tags_Environment": {
+      "value": "tst"
+    },
+    "1_Deploy_Backup_Vault": {
+      "value": false
+    },
+    "1_Deploy_KeyVault": {
+      "value": false
+    },
+    "1_Deploy_Site_Recovery": {
+      "value": false
+    },
+    "1_Deploy_Virtual_Network": {
+      "value": true
+    },
+    "2_Deploy_Storage": {
+      "value": false
+    },
+    "2_Deploy_NVA_Cisco": {
+      "value": false
+    },
+    "2_Deploy_NVA_PaloAlto": {
+      "value": false
+    },
+    "3_Deploy_ActiveDirectory": {
+      "value": false
+    },
+    "4_Deploy_DFS_Farm": {
+      "value": false
+    },
+    "5_Deploy_RDS_Farm": {
+      "value": true
+    },
+    "6_Deploy_Tempalte_WORKLOAD_placeholder": {
+      "value": false
+    },
+    "7_Deploy_ExpressRoute": {
+      "value": false
+    },
+    "7_Deploy_VPN": {
+      "value": false
+    },
+    "Admin_Password": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/3a8206a1-e9f3-44a2-84f0-e532b9862258/resourceGroups/zx9-RG-security/providers/Microsoft.KeyVault/vaults/zx9KeyVault"
+        },
+        "secretName": "Built-Local-Admin-Passsword"
+      }
+    },
+    "SQLAdmin_Password": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/3a8206a1-e9f3-44a2-84f0-e532b9862258/resourceGroups/zx9-RG-security/providers/Microsoft.KeyVault/vaults/zx9KeyVault"
+        },
+        "secretName": "SQL-Admin-Passsword"
+      }
+    }
+   
+  }
+}

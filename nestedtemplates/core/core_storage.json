@@ -1,0 +1,199 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Client_Prefix": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "Tags_Department": {
+      "type": "string"
+    },
+    "Tags_Application": {
+      "type": "string"
+    },
+    "Tags_CostCenter": {
+      "type": "string"
+    },
+    "Tags_Environment": {
+      "type": "string"
+    },
+    "vNETRef_Hub": {
+      "type": "string"
+    },
+    "vNETRef_Spoke": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "monitor01Ref": "[concat(parameters('Client_Prefix'), 'monitor01')]",
+    "nva01Ref": "[concat(parameters('Client_Prefix'), 'nva01')]",
+    "StorageFirewall": {
+      "SFW_Hub_Identity": "[concat(parameters('vNETRef_Hub'), '/subnets/Identity')]",
+      "SFW_Hub_NVADiags": "[concat(parameters('vNETRef_Hub'), '/subnets/nvaDiags')]",
+      "SFW_Hub_NVAMgt": "[concat(parameters('vNETRef_Hub'), '/subnets/nvaManagement')]",
+      "SFW_Hub_Shared": "[concat(parameters('vNETRef_Hub'), '/subnets/SharedServices')]",
+      "SFW_Spoke_Web": "[concat(parameters('vNETRef_Spoke'), '/subnets/Web')]",
+      "SFW_Spoke_App": "[concat(parameters('vNETRef_Spoke'), '/subnets/App')]",
+      "SFW_Spoke_Database": "[concat(parameters('vNETRef_Spoke'), '/subnets/Database')]"      
+    },
+    "Storage_Monitor_Info": [
+      {
+        "Storage_Name": "[concat(parameters('Client_Prefix'), 'monitor01')]",
+        "Storage_kind": "StorageV2",
+        "Storage_accountType": "Standard_LRS",
+        "Storage_accessTier": "Cool"
+      }
+    ],
+    "Storage_NVA_Info": [
+      {
+        "Storage_Name": "[concat(parameters('Client_Prefix'), 'nva01')]",
+        "Storage_kind": "StorageV2",
+        "Storage_accountType": "Standard_LRS",
+        "Storage_accessTier": "Hot"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('Storage_Monitor_Info')[copyIndex()].storage_Name]",
+      "apiVersion": "2017-10-01",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "StorageCopy",
+        "count": "[length(variables('Storage_Monitor_Info'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "Storage Account Monitor"
+      },
+      "sku": {
+        "name": "[variables('Storage_Monitor_Info')[copyIndex()].Storage_accountType]"
+      },
+      "kind": "[variables('Storage_Monitor_Info')[copyIndex()].Storage_kind]",
+      "properties": {
+        "supportsHttpsTrafficOnly": true,
+        "accessTier": "[variables('Storage_Monitor_Info')[copyIndex()].Storage_accessTier]",
+        "encryption": {
+          "services": {
+            "blob": {
+              "enabled": true
+            },
+            "file": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        },
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [
+            {
+              "id": "[variables('StorageFirewall').SFW_Hub_Identity]",
+              "action": "Allow"
+            },
+            {
+              "id": "[variables('StorageFirewall').SFW_Hub_NVADiags]",
+              "action": "Allow"
+            },
+            {
+              "id": "[variables('StorageFirewall').SFW_Hub_NVAMgt]",
+              "action": "Allow"
+            },
+            {
+              "id": "[variables('StorageFirewall').SFW_Hub_Shared]",
+              "action": "Allow"
+            },
+            {
+              "id": "[variables('StorageFirewall').SFW_Spoke_Web]",
+              "action": "Allow"
+            },
+            {
+              "id": "[variables('StorageFirewall').SFW_Spoke_App]",
+              "action": "Allow"
+            },
+            {
+              "id": "[variables('StorageFirewall').SFW_Spoke_Database]",
+              "action": "Allow"
+            }
+          ],
+          "ipRules": [],
+          "defaultAction": "Deny"
+        }
+      },
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('Storage_NVA_Info')[copyIndex()].storage_Name]",
+      "apiVersion": "2017-10-01",
+      "location": "[parameters('location')]",
+      "copy": {
+        "name": "StorageCopy",
+        "count": "[length(variables('Storage_NVA_Info'))]"
+      },
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "Storage Account NVA"
+      },
+      "sku": {
+        "name": "[variables('Storage_NVA_Info')[copyIndex()].Storage_accountType]"
+      },
+      "kind": "[variables('Storage_NVA_Info')[copyIndex()].Storage_kind]",
+      "properties": {
+        "supportsHttpsTrafficOnly": true,
+        "accessTier": "[variables('Storage_NVA_Info')[copyIndex()].Storage_accessTier]",
+        "encryption": {
+          "services": {
+            "blob": {
+              "enabled": true
+            },
+            "file": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        },
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [
+           {
+              "id": "[variables('StorageFirewall').SFW_Hub_NVADiags]",
+              "action": "Allow"
+            },
+            {
+              "id": "[variables('StorageFirewall').SFW_Hub_NVAMgt]",
+              "action": "Allow"
+            }
+          ],
+          "ipRules": [],
+          "defaultAction": "Deny"
+        }
+      },
+      "dependsOn": [
+
+      ]
+    }
+  ],
+  "outputs": {
+    "storageRef_monitor01": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Storage/storageAccounts', variables('monitor01Ref'))]"
+    },
+    "storageRef_nva01": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Storage/storageAccounts', variables('nva01Ref'))]"
+    }
+  }
+}

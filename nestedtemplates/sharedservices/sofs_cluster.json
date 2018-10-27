@@ -1,0 +1,667 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualMachines_Clust01_adminPassword": {
+      "defaultValue": null,
+      "type": "SecureString"
+    },
+    "virtualMachines_Clust02_adminPassword": {
+      "defaultValue": null,
+      "type": "SecureString"
+    },
+    "virtualMachines_Clust03_adminPassword": {
+      "defaultValue": null,
+      "type": "SecureString"
+    },
+    "virtualMachines_Clust04_adminPassword": {
+      "defaultValue": null,
+      "type": "SecureString"
+    },
+    "virtualMachines_DC_adminPassword": {
+      "defaultValue": null,
+      "type": "SecureString"
+    },
+    "virtualMachines_Clust01_name": {
+      "defaultValue": "Clust01",
+      "type": "String"
+    },
+    "virtualMachines_Clust02_name": {
+      "defaultValue": "Clust02",
+      "type": "String"
+    },
+    "virtualMachines_Clust03_name": {
+      "defaultValue": "Clust03",
+      "type": "String"
+    },
+    "virtualMachines_Clust04_name": {
+      "defaultValue": "Clust04",
+      "type": "String"
+    },
+    "virtualMachines_DC_name": {
+      "defaultValue": "DC",
+      "type": "String"
+    },
+    "networkInterfaces_Clust01NetworkInterface_name": {
+      "defaultValue": "Clust01_NIC",
+      "type": "String"
+    },
+    "networkInterfaces_Clust02NetworkInterface_name": {
+      "defaultValue": "Clust02_NIC",
+      "type": "String"
+    },
+    "networkInterfaces_Clust03NetworkInterface_name": {
+      "defaultValue": "Clust03_NIC",
+      "type": "String"
+    },
+    "networkInterfaces_Clust04NetworkInterface_name": {
+      "defaultValue": "Clust04_NIC",
+      "type": "String"
+    },
+    "networkInterfaces_DCNetworkInterface_name": {
+      "defaultValue": "DC_NIC",
+      "type": "String"
+    },
+    "networkSecurityGroups_Cluster_NSG_name": {
+      "defaultValue": "Cluster_NSG",
+      "type": "String"
+    },
+    "publicIPAddresses_Public_IP_name": {
+      "defaultValue": "Public_IP",
+      "type": "String"
+    },
+    "virtualNetworks_Cluster_vNET_name": {
+      "defaultValue": "Cluster-vNET",
+      "type": "String"
+    },
+    "storageAccounts_clustclustereddisks_name": {
+      "defaultValue": "clustclustereddisks",
+      "type": "String"
+    },
+    "storageAccounts_clustsharedisks_name": {
+      "defaultValue": "clustsharedisks",
+      "type": "String"
+    }
+  },
+  "variables": { },
+  "resources": [
+    {
+      "comments": "Generalized from resource: '/subscriptions/c82ad9b5-1009-44fd-abdc-2b30f8e55ba0/resourceGroups/Cluster/providers/Microsoft.Compute/virtualMachines/Clust01'.",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[parameters('virtualMachines_Clust01_name')]",
+      "apiVersion": "2015-06-15",
+      "location": "eastus2",
+      "tags": {
+        "displayName": "Clust01"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_DS1_v2"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "Windows-Server-Technical-Preview",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(parameters('virtualMachines_Clust01_name'),'OSDisk')]",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('http', '://', parameters('storageAccounts_clustclustereddisks_name'), '.blob.core.windows.net', concat('/vhds/', parameters('virtualMachines_Clust01_name'),'OSDisk.vhd'))]"
+            },
+            "caching": "ReadWrite"
+          },
+          "dataDisks": [ ]
+        },
+        "osProfile": {
+          "computerName": "[parameters('virtualMachines_Clust01_name')]",
+          "adminUsername": "lntad",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "secrets": [ ],
+          "adminPassword": "[parameters('virtualMachines_Clust01_adminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_Clust01NetworkInterface_name'))]"
+            }
+          ]
+        }
+      },
+      "resources": [ ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_clustclustereddisks_name'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_Clust01NetworkInterface_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/c82ad9b5-1009-44fd-abdc-2b30f8e55ba0/resourceGroups/Cluster/providers/Microsoft.Compute/virtualMachines/Clust02'.",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[parameters('virtualMachines_Clust02_name')]",
+      "apiVersion": "2015-06-15",
+      "location": "eastus2",
+      "tags": {
+        "displayName": "Clust02"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_DS1_v2"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "Windows-Server-Technical-Preview",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(parameters('virtualMachines_Clust02_name'),'OSDisk')]",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('http', '://', parameters('storageAccounts_clustclustereddisks_name'), '.blob.core.windows.net', concat('/vhds/', parameters('virtualMachines_Clust02_name'),'OSDisk.vhd'))]"
+            },
+            "caching": "ReadWrite"
+          },
+          "dataDisks": [ ]
+        },
+        "osProfile": {
+          "computerName": "[parameters('virtualMachines_Clust02_name')]",
+          "adminUsername": "lntad",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "secrets": [ ],
+          "adminPassword": "[parameters('virtualMachines_Clust02_adminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_Clust02NetworkInterface_name'))]"
+            }
+          ]
+        }
+      },
+      "resources": [ ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_clustclustereddisks_name'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_Clust02NetworkInterface_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/c82ad9b5-1009-44fd-abdc-2b30f8e55ba0/resourceGroups/Cluster/providers/Microsoft.Compute/virtualMachines/Clust03'.",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[parameters('virtualMachines_Clust03_name')]",
+      "apiVersion": "2015-06-15",
+      "location": "eastus2",
+      "tags": {
+        "displayName": "Clust03"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_DS1_v2"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "Windows-Server-Technical-Preview",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(parameters('virtualMachines_Clust03_name'),'OSDisk')]",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('http', '://', parameters('storageAccounts_clustclustereddisks_name'), '.blob.core.windows.net', concat('/vhds/', parameters('virtualMachines_Clust03_name'),'OSDisk.vhd'))]"
+            },
+            "caching": "ReadWrite"
+          },
+          "dataDisks": [ ]
+        },
+        "osProfile": {
+          "computerName": "[parameters('virtualMachines_Clust03_name')]",
+          "adminUsername": "lntad",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "secrets": [ ],
+          "adminPassword": "[parameters('virtualMachines_Clust03_adminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_Clust03NetworkInterface_name'))]"
+            }
+          ]
+        }
+      },
+      "resources": [ ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_clustclustereddisks_name'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_Clust03NetworkInterface_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/c82ad9b5-1009-44fd-abdc-2b30f8e55ba0/resourceGroups/Cluster/providers/Microsoft.Compute/virtualMachines/Clust04'.",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[parameters('virtualMachines_Clust04_name')]",
+      "apiVersion": "2015-06-15",
+      "location": "eastus2",
+      "tags": {
+        "displayName": "Clust04"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_DS1_v2"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "Windows-Server-Technical-Preview",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(parameters('virtualMachines_Clust04_name'),'OSDisk')]",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('http', '://', parameters('storageAccounts_clustclustereddisks_name'), '.blob.core.windows.net', concat('/vhds/', parameters('virtualMachines_Clust04_name'),'OSDisk.vhd'))]"
+            },
+            "caching": "ReadWrite"
+          },
+          "dataDisks": [ ]
+        },
+        "osProfile": {
+          "computerName": "[parameters('virtualMachines_Clust04_name')]",
+          "adminUsername": "lntad",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "secrets": [ ],
+          "adminPassword": "[parameters('virtualMachines_Clust04_adminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_Clust04NetworkInterface_name'))]"
+            }
+          ]
+        }
+      },
+      "resources": [ ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_clustclustereddisks_name'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_Clust04NetworkInterface_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/c82ad9b5-1009-44fd-abdc-2b30f8e55ba0/resourceGroups/Cluster/providers/Microsoft.Compute/virtualMachines/DC'.",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[parameters('virtualMachines_DC_name')]",
+      "apiVersion": "2015-06-15",
+      "location": "eastus2",
+      "tags": {
+        "displayName": "DC"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_D1"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "Windows-Server-Technical-Preview",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(parameters('virtualMachines_DC_name'),'OSDisk')]",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('http', '://', parameters('storageAccounts_clustsharedisks_name'), '.blob.core.windows.net', concat('/vhds/', parameters('virtualMachines_DC_name'),'OSDisk.vhd'))]"
+            },
+            "caching": "ReadWrite"
+          },
+          "dataDisks": [ ]
+        },
+        "osProfile": {
+          "computerName": "[parameters('virtualMachines_DC_name')]",
+          "adminUsername": "lntad",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "secrets": [ ],
+          "adminPassword": "[parameters('virtualMachines_DC_adminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_DCNetworkInterface_name'))]"
+            }
+          ]
+        }
+      },
+      "resources": [ ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_clustsharedisks_name'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_DCNetworkInterface_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/c82ad9b5-1009-44fd-abdc-2b30f8e55ba0/resourceGroups/Cluster/providers/Microsoft.Network/networkInterfaces/Clust01NetworkInterface'.",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[parameters('networkInterfaces_Clust01NetworkInterface_name')]",
+      "apiVersion": "2016-03-30",
+      "location": "eastus2",
+      "tags": {
+        "displayName": "Clust01_NIC"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAddress": "192.168.102.4",
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_Cluster_vNET_name')), '/subnets/ClusterSubnet')]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": [ ]
+        },
+        "enableIPForwarding": false
+      },
+      "resources": [ ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_Cluster_vNET_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/c82ad9b5-1009-44fd-abdc-2b30f8e55ba0/resourceGroups/Cluster/providers/Microsoft.Network/networkInterfaces/Clust02NetworkInterface'.",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[parameters('networkInterfaces_Clust02NetworkInterface_name')]",
+      "apiVersion": "2016-03-30",
+      "location": "eastus2",
+      "tags": {
+        "displayName": "Clust02_NIC"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAddress": "192.168.102.5",
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_Cluster_vNET_name')), '/subnets/ClusterSubnet')]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": [ ]
+        },
+        "enableIPForwarding": false
+      },
+      "resources": [ ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_Cluster_vNET_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/c82ad9b5-1009-44fd-abdc-2b30f8e55ba0/resourceGroups/Cluster/providers/Microsoft.Network/networkInterfaces/Clust03NetworkInterface'.",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[parameters('networkInterfaces_Clust03NetworkInterface_name')]",
+      "apiVersion": "2016-03-30",
+      "location": "eastus2",
+      "tags": {
+        "displayName": "Clust03_NIC"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAddress": "192.168.102.6",
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_Cluster_vNET_name')), '/subnets/ClusterSubnet')]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": [ ]
+        },
+        "enableIPForwarding": false
+      },
+      "resources": [ ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_Cluster_vNET_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/c82ad9b5-1009-44fd-abdc-2b30f8e55ba0/resourceGroups/Cluster/providers/Microsoft.Network/networkInterfaces/Clust04NetworkInterface'.",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[parameters('networkInterfaces_Clust04NetworkInterface_name')]",
+      "apiVersion": "2016-03-30",
+      "location": "eastus2",
+      "tags": {
+        "displayName": "Clust04_NIC"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAddress": "192.168.102.7",
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_Cluster_vNET_name')), '/subnets/ClusterSubnet')]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": [ ]
+        },
+        "enableIPForwarding": false
+      },
+      "resources": [ ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_Cluster_vNET_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/c82ad9b5-1009-44fd-abdc-2b30f8e55ba0/resourceGroups/Cluster/providers/Microsoft.Network/networkInterfaces/DCNetworkInterface'.",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[parameters('networkInterfaces_DCNetworkInterface_name')]",
+      "apiVersion": "2016-03-30",
+      "location": "eastus2",
+      "tags": {
+        "displayName": "DC_NIC"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAddress": "192.168.101.4",
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_Cluster_vNET_name')), '/subnets/SharedServices')]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": [ ]
+        },
+        "enableIPForwarding": false,
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_Cluster_NSG_name'))]"
+        }
+      },
+      "resources": [ ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_Cluster_vNET_name'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_Cluster_NSG_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/c82ad9b5-1009-44fd-abdc-2b30f8e55ba0/resourceGroups/Cluster/providers/Microsoft.Network/networkSecurityGroups/Cluster_NSG'.",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[parameters('networkSecurityGroups_Cluster_NSG_name')]",
+      "apiVersion": "2016-03-30",
+      "location": "eastus2",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "RDP",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "PowerShell",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "5986",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 110,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      },
+      "resources": [ ],
+      "dependsOn": [ ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/c82ad9b5-1009-44fd-abdc-2b30f8e55ba0/resourceGroups/Cluster/providers/Microsoft.Network/publicIPAddresses/Public_IP'.",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[parameters('publicIPAddresses_Public_IP_name')]",
+      "apiVersion": "2016-03-30",
+      "location": "eastus2",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "idleTimeoutInMinutes": 4,
+        "dnsSettings": {
+          "domainNameLabel": "clusterpubip"
+        }
+      },
+      "resources": [ ],
+      "dependsOn": [ ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/c82ad9b5-1009-44fd-abdc-2b30f8e55ba0/resourceGroups/Cluster/providers/Microsoft.Network/virtualNetworks/Cluster-vNET'.",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('virtualNetworks_Cluster_vNET_name')]",
+      "apiVersion": "2016-03-30",
+      "location": "eastus2",
+      "tags": {
+        "displayName": "Cluster-vNET"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "192.168.100.0/16"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "GatewaySubnet",
+            "properties": {
+              "addressPrefix": "192.168.100.0/24"
+            }
+          },
+          {
+            "name": "SharedServices",
+            "properties": {
+              "addressPrefix": "192.168.101.0/24"
+            }
+          },
+          {
+            "name": "ClusterSubnet",
+            "properties": {
+              "addressPrefix": "192.168.102.0/24"
+            }
+          }
+        ]
+      },
+      "resources": [ ],
+      "dependsOn": [ ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/c82ad9b5-1009-44fd-abdc-2b30f8e55ba0/resourceGroups/cluster/providers/Microsoft.Storage/storageAccounts/clustclustereddisks'.",
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "Premium_LRS",
+        "tier": "Premium"
+      },
+      "kind": "Storage",
+      "name": "[parameters('storageAccounts_clustclustereddisks_name')]",
+      "apiVersion": "2016-01-01",
+      "location": "eastus2",
+      "tags": { },
+      "properties": {
+        "encryption": {
+          "keySource": "Microsoft.Storage",
+          "services": {
+            "blob": {
+              "enabled": true
+            }
+          }
+        }
+      },
+      "resources": [ ],
+      "dependsOn": [ ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/c82ad9b5-1009-44fd-abdc-2b30f8e55ba0/resourceGroups/cluster/providers/Microsoft.Storage/storageAccounts/clustsharedisks'.",
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "Standard_RAGRS",
+        "tier": "Standard"
+      },
+      "kind": "Storage",
+      "name": "[parameters('storageAccounts_clustsharedisks_name')]",
+      "apiVersion": "2016-01-01",
+      "location": "eastus2",
+      "tags": { },
+      "properties": {
+        "encryption": {
+          "keySource": "Microsoft.Storage",
+          "services": {
+            "blob": {
+              "enabled": true
+            }
+          }
+        }
+      },
+      "resources": [ ],
+      "dependsOn": [ ]
+    }
+  ]
+}

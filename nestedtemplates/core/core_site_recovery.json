@@ -1,0 +1,49 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Client_Prefix": {
+      "type": "string"
+    },
+    "Location": {
+      "type": "string"
+    },
+    "Tags_Application": {
+      "type": "string"
+    },
+    "Tags_CostCenter": {
+      "type": "string"
+    },
+    "Tags_Department": {
+      "type": "string"
+    },
+    "Tags_Environment": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "RecoveryVault": "[concat(parameters('Client_Prefix'), 'RecoveryVault')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.RecoveryServices/vaults",
+      "apiVersion": "2016-06-01",
+      "name": "[variables('RecoveryVault')]",
+      "location": "[parameters('Location')]",
+      "tags": {
+        "Application": "[parameters('Tags_Application')]",
+        "CostCenter": "[parameters('Tags_CostCenter')]",
+        "Department": "[parameters('Tags_Department')]",
+        "Environment": "[parameters('Tags_Environment')]",
+        "displayName": "Site Recovery Vault"
+      },
+      "sku": {
+        "name": "RS0",
+        "tier": "Standard"
+      },
+      "properties": {
+
+      }
+    }
+  ]
+}

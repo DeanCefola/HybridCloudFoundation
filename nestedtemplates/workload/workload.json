@@ -1,0 +1,45 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Admin_Password": {
+      "type": "string"
+    },
+    "Admin_UserName": {
+      "type": "string"
+    },
+    "Client_Prefix": {
+      "type": "string"
+    },
+    "DomainName": {
+      "type": "string"
+    },
+    "Hybrid_Use_Benifit": {
+      "type": "string"
+    },
+    "IPAddress_Space": {
+      "type": "string"
+    },
+    "Location": {
+      "type": "string"
+    },
+    "Tags_Application": {
+      "type": "string"
+    },
+    "Tags_CostCenter": {
+      "type": "string"
+    },
+    "Tags_Department": {
+      "type": "string"
+    },
+    "vNETRef_Spoke": {
+      "type": "string"
+    }
+  },
+  "variables": {
+  },
+  "resources": [
+  ],
+  "outputs": {
+  }
+}
