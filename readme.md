@@ -1,7 +1,7 @@
 ﻿**Overview for Azure Hybrid Cloud Foundation Templates:**
+============================
 
 **This Master template creates the following resources:**
-============================
 	-2 Virtual Network
 	-1 monitoring storage account
 	-1 storage account for NVA
@@ -18,7 +18,7 @@
 		-After the HCF is in place install your application on the spoke virtual network
 		-If more appication space is needed either add address spaces to the spoke vnet or create a new vnet spoke and peer to hub
 
-Deployment Parameters: 
+**Deployment Parameters:**
 	Client_Prefix:  This is a unique identifier that will be used as a prefix for resources that need globally unique IDs.  
 	IPRange: you are free to specify any IP range you like, just specify the first 2 octets (ex. 10.0 or 172.18)   
 	TAGS: 
@@ -34,7 +34,7 @@ Deployment Parameters:
 		Auth_authenticationType: - NVA related parameter, options are ssh or password
 		Domain:  - NetBios domain names only
 
-Virtual Network:
+**Virtual Network:**
 	HUB
 		Single Address Space
 		Multiple subnets
@@ -51,25 +51,25 @@ Virtual Network:
 			Database - for Database tier servers
 			Tools - Allocated to Application Gateways, if required 
 
-Network Security Group
+**Network Security Group:**
 	Each Subnet will have 1 NSG applied 
 	VMs generally do not have a NSG generally applied directly
 
-VM General Details:
+**VM General Details:**
 	Each VM in the deployment will have 1 NIC 
 	VMs will have at least 1 data disk 	
 
-Active Directory Domain:
+**Active Directory Domain:**
 	Deploy 2 domain controllers 
 	FSMO roles are deployed to the first DC
 	ADDS is deployed with PowerShell DSC
 
-Distributed File Services:
+**Distributed File Services:**
 	Deploy 2 DFS Servers in the same namespace 
 	DFS is used as the location for User disks in RDS
 	DFS is deployed with PowerShell scripts
 
-RDSFarm:
+**RDSFarm:**
 	Multiple RDS roles
 		2 Connection Brokers in HA using Azure SQL
 		2 Web Access Servers in HA
