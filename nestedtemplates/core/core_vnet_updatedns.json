@@ -337,14 +337,10 @@
           ]
         }
       ]
-    },
-
-
-
-
+    },    
     {
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[concat(parameters('Client_Prefix'), '-Hub00-NSG-NVAMgt')]",
+      "name": "[concat(parameters('Client_Prefix'), 'vnet1-NSG-NVAMgt')]",
       "apiVersion": "2017-06-01",
       "location": "[parameters('Location')]",
       "tags": {
@@ -522,7 +518,7 @@
     },
     {
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[concat(parameters('Client_Prefix'), '-Hub00-NSG-identity')]",
+      "name": "[concat(parameters('Client_Prefix'), 'vnet1-NSG-identity')]",
       "apiVersion": "2017-06-01",
       "location": "[parameters('location')]",
       "tags": {
@@ -867,7 +863,7 @@
               "sourceAddressPrefix": "VirtualNetwork",
               "destinationAddressPrefix": "*",
               "access": "Allow",
-              "priority": 118,
+              "priority": 1001,
               "direction": "Inbound"
             }
           },
@@ -881,7 +877,25 @@
               "sourceAddressPrefix": "VirtualNetwork",
               "destinationAddressPrefix": "VirtualNetwork",
               "access": "Allow",
-              "priority": 119,
+              "priority": 118,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "AzureStorage-Inbound",
+            "properties": {
+              "description": "AzureStorage-Inbound",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "Storage.EastUS2",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 1000,
               "direction": "Inbound",
               "sourcePortRanges": [],
               "destinationPortRanges": [],
@@ -893,33 +907,14 @@
             "name": "AzureStorage-Outbound",
             "properties": {
               "description": "AzureStorage-Inbound",
-              "protocol": "Tcp",
-              "sourcePortRange": "8443",
-              "destinationPortRange": "8443",
-              "sourceAddressPrefix": "VirtualNetwork",
-              "destinationAddressPrefix": "[concat('Storage.', resourceGroup().location)]",
-              "access": "Allow",
-              "priority": 1000,
-              "direction": "Outbound",
-              "sourcePortRanges": [],
-              "destinationPortRanges": [],
-              "sourceAddressPrefixes": [],
-              "destinationAddressPrefixes": []
-            }
-          },
-          {
-            "name": "Internet-Inbound--Deny",
-            "properties": {
-              "provisioningState": "Succeeded",
-              "description": "Internet-Inbound--Deny",
               "protocol": "*",
               "sourcePortRange": "*",
               "destinationPortRange": "*",
-              "sourceAddressPrefix": "Internet",
-              "destinationAddressPrefix": "*",
-              "access": "Deny",
-              "priority": 4096,
-              "direction": "Inbound",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Storage.EastUS2",
+              "access": "Allow",
+              "priority": 1000,
+              "direction": "Outbound",
               "sourcePortRanges": [],
               "destinationPortRanges": [],
               "sourceAddressPrefixes": [],
@@ -1044,7 +1039,7 @@
     },
     {
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[concat(parameters('Client_Prefix'), '-Hub00-NSG-SharedServices')]",
+      "name": "[concat(parameters('Client_Prefix'), 'vnet1-NSG-SharedServices')]",
       "apiVersion": "2017-09-01",
       "location": "[parameters('location')]",
       "tags": {
@@ -1056,6 +1051,24 @@
       },
       "properties": {
         "securityRules": [
+          {
+            "name": "SSL",
+            "properties": {
+              "description": "SSL",
+              "protocol": "*",
+              "sourcePortRange": "443",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
           {
             "name": "AD-SMB_CIFS_DFSN_LSARPC_NbtSS_NetLogonR_SamR_SrvSvc",
             "properties": {
@@ -1075,17 +1088,17 @@
             }
           },
           {
-            "name": "AzureStorage-Outbound",
+            "name": "RDP",
             "properties": {
-              "description": "AzureStorage-Inbound",
-              "protocol": "tcp",
-              "sourcePortRange": "8443",
-              "destinationPortRange": "8443",
+              "description": "RDP",
+              "protocol": "*",
+              "sourcePortRange": "3389",
+              "destinationPortRange": "3389",
               "sourceAddressPrefix": "VirtualNetwork",
-              "destinationAddressPrefix": "[concat('Storage.', resourceGroup().location)]",
+              "destinationAddressPrefix": "VirtualNetwork",
               "access": "Allow",
-              "priority": 1000,
-              "direction": "Outbound",
+              "priority": 102,
+              "direction": "Inbound",
               "sourcePortRanges": [],
               "destinationPortRanges": [],
               "sourceAddressPrefixes": [],
@@ -1093,18 +1106,48 @@
             }
           },
           {
-            "name": "Internet-Inbound--Deny",
+            "name": "PowerShell",
             "properties": {
-              "provisioningState": "Succeeded",
-              "description": "Internet-Inbound--Deny",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "5986",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 1001,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "AzureStorage-Inbound",
+            "properties": {
+              "description": "AzureStorage-Inbound",
               "protocol": "*",
               "sourcePortRange": "*",
               "destinationPortRange": "*",
-              "sourceAddressPrefix": "Internet",
-              "destinationAddressPrefix": "*",
-              "access": "Deny",
-              "priority": 4096,
+              "sourceAddressPrefix": "Storage.EastUS2",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 1000,
               "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "AzureStorage-Outbound",
+            "properties": {
+              "description": "AzureStorage-Inbound",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Storage.EastUS2",
+              "access": "Allow",
+              "priority": 1000,
+              "direction": "Outbound",
               "sourcePortRanges": [],
               "destinationPortRanges": [],
               "sourceAddressPrefixes": [],
@@ -1229,7 +1272,7 @@
     },
     {
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[concat(parameters('Client_Prefix'), '-Hub00-NSG-Tools')]",
+      "name": "[concat(parameters('Client_Prefix'), 'vnet1-NSG-Tools')]",
       "apiVersion": "2017-09-01",
       "location": "[parameters('location')]",
       "tags": {
@@ -1242,17 +1285,17 @@
       "properties": {
         "securityRules": [
           {
-            "name": "AzureStorage-Outbound",
+            "name": "SSL",
             "properties": {
-              "description": "AzureStorage-Inbound",
-              "protocol": "tcp",
-              "sourcePortRange": "8443",
-              "destinationPortRange": "8443",
+              "description": "SSL",
+              "protocol": "*",
+              "sourcePortRange": "443",
+              "destinationPortRange": "443",
               "sourceAddressPrefix": "VirtualNetwork",
-              "destinationAddressPrefix": "[concat('Storage.', resourceGroup().location)]",
+              "destinationAddressPrefix": "VirtualNetwork",
               "access": "Allow",
-              "priority": 1000,
-              "direction": "Outbound",
+              "priority": 100,
+              "direction": "Inbound",
               "sourcePortRanges": [],
               "destinationPortRanges": [],
               "sourceAddressPrefixes": [],
@@ -1260,18 +1303,48 @@
             }
           },
           {
-            "name": "Internet-Inbound--Deny",
+            "name": "PowerShell",
             "properties": {
-              "provisioningState": "Succeeded",
-              "description": "Internet-Inbound--Deny",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "5986",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 1001,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "AzureStorage-Inbound",
+            "properties": {
+              "description": "AzureStorage-Inbound",
               "protocol": "*",
               "sourcePortRange": "*",
               "destinationPortRange": "*",
-              "sourceAddressPrefix": "Internet",
-              "destinationAddressPrefix": "*",
-              "access": "Deny",
-              "priority": 4096,
+              "sourceAddressPrefix": "Storage.EastUS2",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 1000,
               "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "AzureStorage-Outbound",
+            "properties": {
+              "description": "AzureStorage-Inbound",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Storage.EastUS2",
+              "access": "Allow",
+              "priority": 1000,
+              "direction": "Outbound",
               "sourcePortRanges": [],
               "destinationPortRanges": [],
               "sourceAddressPrefixes": [],
@@ -1396,7 +1469,7 @@
     },
     {
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[concat(parameters('Client_Prefix'), '-Spoke00-NSG-Web')]",
+      "name": "[concat(parameters('Client_Prefix'), 'vnet2-NSG-Web')]",
       "apiVersion": "2017-09-01",
       "location": "[parameters('location')]",
       "tags": {
@@ -1409,17 +1482,17 @@
       "properties": {
         "securityRules": [
           {
-            "name": "AzureStorage-Outbound",
+            "name": "SSL",
             "properties": {
-              "description": "AzureStorage-Inbound",
-              "protocol": "tcp",
-              "sourcePortRange": "8443",
-              "destinationPortRange": "8443",
+              "description": "SSL",
+              "protocol": "*",
+              "sourcePortRange": "443",
+              "destinationPortRange": "443",
               "sourceAddressPrefix": "VirtualNetwork",
-              "destinationAddressPrefix": "[concat('Storage.', resourceGroup().location)]",
+              "destinationAddressPrefix": "VirtualNetwork",
               "access": "Allow",
-              "priority": 1000,
-              "direction": "Outbound",
+              "priority": 100,
+              "direction": "Inbound",
               "sourcePortRanges": [],
               "destinationPortRanges": [],
               "sourceAddressPrefixes": [],
@@ -1427,18 +1500,48 @@
             }
           },
           {
-            "name": "Internet-Inbound--Deny",
+            "name": "PowerShell",
             "properties": {
-              "provisioningState": "Succeeded",
-              "description": "Internet-Inbound--Deny",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "5986",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 1001,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "AzureStorage-Inbound",
+            "properties": {
+              "description": "AzureStorage-Inbound",
               "protocol": "*",
               "sourcePortRange": "*",
               "destinationPortRange": "*",
-              "sourceAddressPrefix": "Internet",
-              "destinationAddressPrefix": "*",
-              "access": "Deny",
-              "priority": 4096,
+              "sourceAddressPrefix": "Storage.EastUS2",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 1000,
               "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "AzureStorage-Outbound",
+            "properties": {
+              "description": "AzureStorage-Inbound",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Storage.EastUS2",
+              "access": "Allow",
+              "priority": 1000,
+              "direction": "Outbound",
               "sourcePortRanges": [],
               "destinationPortRanges": [],
               "sourceAddressPrefixes": [],
@@ -1563,7 +1666,7 @@
     },
     {
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[concat(parameters('Client_Prefix'), '-Spoke00-NSG-App')]",
+      "name": "[concat(parameters('Client_Prefix'), 'vnet2-NSG-App')]",
       "apiVersion": "2017-09-01",
       "location": "[parameters('location')]",
       "tags": {
@@ -1576,17 +1679,17 @@
       "properties": {
         "securityRules": [
           {
-            "name": "AzureStorage-Outbound",
+            "name": "SSL",
             "properties": {
-              "description": "AzureStorage-Inbound",
-              "protocol": "tcp",
-              "sourcePortRange": "8443",
-              "destinationPortRange": "8443",
+              "description": "SSL",
+              "protocol": "*",
+              "sourcePortRange": "443",
+              "destinationPortRange": "443",
               "sourceAddressPrefix": "VirtualNetwork",
-              "destinationAddressPrefix": "[concat('Storage.', resourceGroup().location)]",
+              "destinationAddressPrefix": "VirtualNetwork",
               "access": "Allow",
-              "priority": 1000,
-              "direction": "Outbound",
+              "priority": 100,
+              "direction": "Inbound",
               "sourcePortRanges": [],
               "destinationPortRanges": [],
               "sourceAddressPrefixes": [],
@@ -1594,18 +1697,30 @@
             }
           },
           {
-            "name": "Internet-Inbound--Deny",
+            "name": "PowerShell",
             "properties": {
-              "provisioningState": "Succeeded",
-              "description": "Internet-Inbound--Deny",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "5986",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 1001,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "AzureStorage-Outbound",
+            "properties": {
+              "description": "AzureStorage-Inbound",
               "protocol": "*",
               "sourcePortRange": "*",
               "destinationPortRange": "*",
-              "sourceAddressPrefix": "Internet",
-              "destinationAddressPrefix": "*",
-              "access": "Deny",
-              "priority": 4096,
-              "direction": "Inbound",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Storage.EastUS2",
+              "access": "Allow",
+              "priority": 1000,
+              "direction": "Outbound",
               "sourcePortRanges": [],
               "destinationPortRanges": [],
               "sourceAddressPrefixes": [],
@@ -1730,7 +1845,7 @@
     },
     {
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[concat(parameters('Client_Prefix'), '-Spoke00-NSG-Database')]",
+      "name": "[concat(parameters('Client_Prefix'), 'vnet2-NSG-Database')]",
       "apiVersion": "2017-09-01",
       "location": "[parameters('location')]",
       "tags": {
@@ -1743,17 +1858,17 @@
       "properties": {
         "securityRules": [
           {
-            "name": "AzureStorage-Outbound",
+            "name": "SSL",
             "properties": {
-              "description": "AzureStorage-Inbound",
-              "protocol": "tcp",
-              "sourcePortRange": "8443",
-              "destinationPortRange": "8443",
+              "description": "SSL",
+              "protocol": "*",
+              "sourcePortRange": "443",
+              "destinationPortRange": "443",
               "sourceAddressPrefix": "VirtualNetwork",
-              "destinationAddressPrefix": "[concat('Storage.', resourceGroup().location)]",
+              "destinationAddressPrefix": "VirtualNetwork",
               "access": "Allow",
-              "priority": 1000,
-              "direction": "Outbound",
+              "priority": 100,
+              "direction": "Inbound",
               "sourcePortRanges": [],
               "destinationPortRanges": [],
               "sourceAddressPrefixes": [],
@@ -1761,18 +1876,48 @@
             }
           },
           {
-            "name": "Internet-Inbound--Deny",
+            "name": "PowerShell",
             "properties": {
-              "provisioningState": "Succeeded",
-              "description": "Internet-Inbound--Deny",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "5986",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 1001,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "AzureStorage-Inbound",
+            "properties": {
+              "description": "AzureStorage-Inbound",
               "protocol": "*",
               "sourcePortRange": "*",
               "destinationPortRange": "*",
-              "sourceAddressPrefix": "Internet",
-              "destinationAddressPrefix": "*",
-              "access": "Deny",
-              "priority": 4096,
+              "sourceAddressPrefix": "Storage.EastUS2",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 1000,
               "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "AzureStorage-Outbound",
+            "properties": {
+              "description": "AzureStorage-Inbound",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Storage.EastUS2",
+              "access": "Allow",
+              "priority": 1000,
+              "direction": "Outbound",
               "sourcePortRanges": [],
               "destinationPortRanges": [],
               "sourceAddressPrefixes": [],
@@ -1897,7 +2042,7 @@
     },
     {
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[concat(parameters('Client_Prefix'), '-Spoke00-NSG-Tools')]",
+      "name": "[concat(parameters('Client_Prefix'), 'vnet2-NSG-Tools')]",
       "apiVersion": "2017-09-01",
       "location": "[parameters('location')]",
       "tags": {
@@ -1910,17 +2055,17 @@
       "properties": {
         "securityRules": [
           {
-            "name": "AzureStorage-Outbound",
+            "name": "SSL",
             "properties": {
-              "description": "AzureStorage-Inbound",
-              "protocol": "tcp",
-              "sourcePortRange": "8443",
-              "destinationPortRange": "8443",
+              "description": "SSL",
+              "protocol": "*",
+              "sourcePortRange": "443",
+              "destinationPortRange": "443",
               "sourceAddressPrefix": "VirtualNetwork",
-              "destinationAddressPrefix": "[concat('Storage.', resourceGroup().location)]",
+              "destinationAddressPrefix": "VirtualNetwork",
               "access": "Allow",
-              "priority": 1000,
-              "direction": "Outbound",
+              "priority": 100,
+              "direction": "Inbound",
               "sourcePortRanges": [],
               "destinationPortRanges": [],
               "sourceAddressPrefixes": [],
@@ -1928,18 +2073,48 @@
             }
           },
           {
-            "name": "Internet-Inbound--Deny",
+            "name": "PowerShell",
             "properties": {
-              "provisioningState": "Succeeded",
-              "description": "Internet-Inbound--Deny",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "5986",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 1001,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "AzureStorage-Inbound",
+            "properties": {
+              "description": "AzureStorage-Inbound",
               "protocol": "*",
               "sourcePortRange": "*",
               "destinationPortRange": "*",
-              "sourceAddressPrefix": "Internet",
-              "destinationAddressPrefix": "*",
-              "access": "Deny",
-              "priority": 4096,
+              "sourceAddressPrefix": "Storage.EastUS2",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 1000,
               "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "AzureStorage-Outbound",
+            "properties": {
+              "description": "AzureStorage-Inbound",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "Storage.EastUS2",
+              "access": "Allow",
+              "priority": 1000,
+              "direction": "Outbound",
               "sourcePortRanges": [],
               "destinationPortRanges": [],
               "sourceAddressPrefixes": [],

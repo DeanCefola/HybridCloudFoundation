@@ -1,0 +1,127 @@
+﻿{
+  "mode": "indexed",
+  "policyRule": {
+    "if": {
+      "field": "type",
+      "equals": "Microsoft.Compute/virtualMachines"
+    },
+    "then": {
+      "effect": "deployIfNotExists",
+      "details": {
+        "resourceGroupName": "[parameters('vaultResourceGroup')]",
+        "type": "Microsoft.RecoveryServices/backupprotecteditems",
+        "existenceCondition": {
+          "field": "name",
+          "like": "*"
+        },
+        "roleDefinitionIds": [
+          "/subscription/3a8206a1-e9f3-44a2-84f0-e532b9862258/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+          "/providers/Microsoft.Authorization/roleDefinitions/5e467623-bb1f-42f4-a55d-6e525e11384b",
+          "/providers/Microsoft.Authorization/roleDefinitions/9980e02c-c2be-4d73-94e8-173b1dc7cf3c"
+        ],
+        "deployment": {
+          "properties": {
+            "mode": "incremental",
+            "template": {
+              "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "vaultName": {
+                  "type": "String"
+                },
+                "vaultRG": {
+                  "type": "String"
+                },
+                "policyName": {
+                  "type": "String",
+                  "defaultValue": "DefaultPolicy"
+                },
+                "fabricName": {
+                  "type": "String"
+                },
+                "protectionContainers": {
+                  "type": "Array"
+                },
+                "protectedItems": {
+                  "type": "Array"
+                },
+                "sourceResourceIds": {
+                  "type": "Array"
+                }
+              },
+              "resources": [
+                {
+                  "type": "Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems",
+                  "name": "[concat(parameters('vaultName'), '/', parameters('fabricName'), '/',parameters('protectedItems'))]",
+                  "apiVersion": "2016-06-01",
+                  "properties": {
+                    "protectedItemType": "Microsoft.Compute/virtualMachines",
+                    "policyId": "[resourceId('Microsoft.RecoveryServices/vaults/backupPolicies', parameters('vaultName'), parameters('policyName'))]",
+                    "sourceResourceId": "[parameters('sourceResourceIds')]"
+                  },
+                  "dependsOn": [
+                    "[concat('Microsoft.RecoveryServices/vaults', '/', parameters('vaultName'), '/backupPolicies/', parameters('policyName'))]"
+                  ]
+                }
+              ]
+            },
+            "parameters": {
+              "vaultName": {
+                "value": "[parameters('vaultName')]"
+              },
+              "vaultRG": {
+                "value": "[parameters('vaultResourceGroup')]"
+              },
+              "policyName": {
+                "value": "[parameters('backupPolicyName')]"
+              },
+              "fabricName": {
+                "value": "Azure"
+              },
+              "protectionContainers": {
+                "value": [
+                  "[concat('iaasvmcontainer;iaasvmcontainerv2;', resourceGroup().name, ';' ,field('name'))]"
+                ]
+              },
+              "protectedItems": {
+                "value": [
+                  "[concat('vm;iaasvmcontainerv2;', resourceGroup().name, ';' ,field('name'))]"
+                ]
+              },
+              "sourceResourceIds": {
+                "value": [
+                  "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Compute/virtualMachines/',field('name'))]"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "vaultResourceGroup": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Resource Group of the vault",
+        "description": "Specify the resource group of the vault"
+      }
+    },
+    "vaultName": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Name of the vault",
+        "description": "Please specify name of an existing vault",
+        "strongType": "Microsoft.RecoveryServices/vaults"
+      }
+    },
+    "backupPolicyName": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Backup Policy Name",
+        "description": "Specify name of an existing backup policy.",
+        "strongType": "Microsoft.RecoveryServices/vaults/backupPolicies"
+      }
+    }
+  }
+}

@@ -8,9 +8,6 @@
     "Admin_UserName": {
       "type": "string"
     },
-    "backupPolicyName": {
-      "type": "string"
-    },    
     "Client_Prefix": {
       "type": "string"
     },

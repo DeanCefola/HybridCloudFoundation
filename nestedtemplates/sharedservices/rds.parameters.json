@@ -1,0 +1,73 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Admin_Password": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/3a8206a1-e9f3-44a2-84f0-e532b9862258/resourceGroups/m08-RG-security/providers/Microsoft.KeyVault/vaults/m08KeyVault"
+        },
+        "secretName": "Built-Local-Admin-Passsword"
+      }
+    },
+    "Admin_UserName": {
+      "value": "lntad"
+    },
+    "Client_Prefix": {
+      "value": "m08"
+    },
+    "DomainFQDN": {
+      "value": "smith.net"
+    },
+    "DSC_rds_1_configuration_url": {
+      "value": "https://m08staging01.blob.core.windows.net/dsc/rds_1_configuration.zip"
+    },
+    "Hybrid_Use_Benifit": {
+      "value": "Windows_Server"
+    },
+    "IPAddress_Space": {
+      "value": "172.16"
+    },
+    "JoinUser": {
+      "value": "contoso\\lntad"
+    },
+    "Location": {
+      "value": "eastus"
+    },
+    "Monitor_Storage_url": {
+      "value": "http://m08monitor01.blob.core.windows.net"
+    },
+    "Scripts_rds_1_connectionbroker_ha_url": {
+      "value": "https://m08staging01.blob.core.windows.net/scripts/rds_1_connectionbroker_ha.ps1"
+    },
+    "Scripts_rds_2_web_gw_postconfig_url": {
+      "value": "https://m08staging01.blob.core.windows.net/scripts/rds_2_web_gw_postconfig.ps1"
+    },
+    "SQLAdmin_Password": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/3a8206a1-e9f3-44a2-84f0-e532b9862258/resourceGroups/m08-RG-security/providers/Microsoft.KeyVault/vaults/m08KeyVault"
+        },
+        "secretName": "SQL-Admin-Passsword"
+      }
+    },
+    "SQLAdmin_UserName": {
+      "value": "SQLAdmin"
+    },
+    "Tags_Application": {
+      "value": "SAP"
+    },
+    "Tags_CostCenter": {
+      "value": "HC99"
+    },
+    "Tags_Department": {
+      "value": "Accounting"
+    },
+    "Tags_Environment": {
+      "value": "tst"
+    },
+    "vNETRef_Hub": {
+      "value": "/subscriptions/3a8206a1-e9f3-44a2-84f0-e532b9862258/resourceGroups/m08-RG-vnets/providers/Microsoft.Network/virtualNetworks/m08vnet01"
+    }
+  }
+}

@@ -91,8 +91,8 @@ Param (
         [string]$Prefix,
     [Parameter(Mandatory=$true)]
         [string]$Application,
-    [Parameter(Mandatory=$false)]
-        [string]$SourcePath,    
+    [Parameter(Mandatory=$true)]
+        [string]$SourcePath='C:\_VSTS\MSDEAN\HCF\HCF',    
     [Parameter(Mandatory=$true)]
         [validateset('australiaeast','australiasoutheast','brazilsouth','canadacentral', `
         'canadaeast','centralindia','centralus','eastasia','eastus','eastus2','japaneast', `
@@ -139,12 +139,12 @@ Process {
     #             Create Resource Groups                #
     #####################################################
     $RGArray = @(
-        ,@("-RG-$Application"; $Location)
-        ,@("-RG-identity"; $Location)
+      #  ,@("-RG-$Application"; $Location)
+      #  ,@("-RG-identity"; $Location)
         ,@("-RG-security"; $Location)
-        ,@("-RG-sharedservices"; $Location)
-        ,@("-RG-vnets"; $Location)
-        ,@("-RG-DisasterRecovery"; $DR_Location)
+      #  ,@("-RG-sharedservices"; $Location)
+      #  ,@("-RG-vnets"; $Location)
+      #  ,@("-RG-DisasterRecovery"; $DR_Location)
     )
     foreach($RG in $RGArray) {
         $RG_Name = $Prefix + $RG[0]
@@ -263,8 +263,7 @@ Process {
             "SQL Secret already exists"
         ""
     }
-
-    <#####################################################
+    #####################################################
     #    Create Azure AD Application for Encryption     #
     #####################################################    
     If ((Get-AzureRmADApplication -DisplayNameStartWith $AADDisplayName -ErrorAction SilentlyContinue) -eq $null) {
@@ -286,7 +285,7 @@ Process {
         ""
         New-AzureRmADServicePrincipal -ApplicationId $AAD_ID
         ""
-       # $AAD_SPN = (Get-AzureRmADServicePrincipal -SearchString $AADDisplayName).Id.Guid
+        $AAD_SPN = (Get-AzureRmADServicePrincipal -SearchString $AADDisplayName).Id.Guid
         Set-AzureRmKeyVaultAccessPolicy `
             -VaultName $KVName  `
             -ResourceGroupName $RGSecurity `
@@ -301,7 +300,7 @@ Process {
             "Application already exists"
         ""      
         $AAD_ID = (Get-AzureRmADApplication -DisplayNameStartWith $AADDisplayName).ApplicationId.Guid
-       #$AAD_SPN = (Get-AzureRmADServicePrincipal -SearchString $AADDisplayName).Id.Guid
+        $AAD_SPN = (Get-AzureRmADServicePrincipal -SearchString $AADDisplayName).Id.Guid
         Set-AzureRmKeyVaultAccessPolicy `
             -VaultName $KVName  `
             -ResourceGroupName $RGSecurity `
@@ -309,8 +308,7 @@ Process {
             -PermissionsToKeys wrapKey `
             -PermissionsToSecrets set
     }
-    #>
-    #####################################################
+    <#####################################################
     #              Create Storage Account               #
     #####################################################
     if ((Get-AzureRmStorageAccount -ResourceGroupName ($Prefix+"-RG-security") -Name $STName -ErrorAction SilentlyContinue) -eq $null) {
@@ -406,6 +404,8 @@ Process {
             -ConfigurationPath  $ConfigPath `
             -Force
     }
+
+    #>
 }
 
 End {
@@ -419,10 +419,11 @@ End {
 ####################################################
 New-AzureRMHCFDeployment `
        -Prefix zx9 `
+       -SourcePath 'C:\_VSTS\MSDEAN\HCF\HCF' `
        -Application sap `
        -Location eastus2 `
        -DR_Location westus2 `
        -KeyVaultAdmin deacef@microsoft.com `
        -LocalAdminUser localadmin `
-       -SQLAdminUser sqladmin `
-       -SourcePath 'C:\_VSTS\MSDEAN\HCF\HCF'
+       -SQLAdminUser sqladmin
+

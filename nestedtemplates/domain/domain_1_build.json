@@ -195,7 +195,7 @@
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[variables('PDCInfo')[copyIndex()].VMName]",
       "apiVersion": "2017-03-30",
-      "location": "[parameters('location')]",
+      "location": "[parameters('location')]",      
       "copy": {
         "name": "PDCCopy",
         "count": "[length(variables('PDCInfo'))]"

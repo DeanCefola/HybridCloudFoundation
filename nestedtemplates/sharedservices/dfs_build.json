@@ -8,15 +8,12 @@
     "Admin_UserName": {
       "type": "string"
     },
-    "backupPolicyName": {
-      "type": "string"
-    },
     "Client_Prefix": {
       "type": "string"
     },
     "DomainFQDN": {
       "type": "string"
-    },
+    },    
     "Hybrid_Use_Benifit": {
       "type": "string"
     },

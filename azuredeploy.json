@@ -1,5 +1,5 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
     "_artifactsLocation": {
@@ -352,7 +352,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "name": "1_Deploy_Backup_Vault",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2019-05-01",
       "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-security')]",
       "properties": {
         "mode": "Incremental",
@@ -391,7 +391,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "name": "1_Deploy_Key_Vault",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2019-05-01",
       "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-security')]",
       "properties": {
         "mode": "Incremental",
@@ -428,7 +428,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "name": "1_Deploy_Site_Recovery",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2019-05-01",
       "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-DisasterRecovery')]",
       "properties": {
         "mode": "Incremental",
@@ -465,13 +465,13 @@
     {
       "type": "Microsoft.Resources/deployments",
       "name": "1_Deploy_vNET_Template",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2019-05-01",
       "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-vnets')]",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
           "uri": "[variables('Templates')['core_vnet_build'].Link]",
-          "contentVersion": "1.0.0.0"
+          "contentVersion": "1.0.0.0"          
         },
         "parameters": {
           "Client_Prefix": {
@@ -505,7 +505,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "name": "2_Deploy_Storage_Template",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2019-05-01",
       "resourceGroup": "[concat(parameters('Client_Prefix'), '-RG-security')]",
       "properties": {
         "mode": "Incremental",
@@ -532,10 +532,10 @@
             "value": "[parameters('Tags_Environment')]"
           },
           "vNETRef_Hub": {
-            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Hub.value]"
+            "value": "[reference('1_Deploy_vNET_Template', '2020-05-01').outputs.vNETRef_Hub.value]"
           },
           "vNETRef_Spoke": {
-            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Spoke.value]"
+            "value": "[reference('1_Deploy_vNET_Template', '2020-05-01').outputs.vNETRef_Spoke.value]"
           }
         }
       },
@@ -547,7 +547,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "name": "2_Deploy_NVA_Cisco_Template",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2019-05-01",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -591,7 +591,7 @@
             "value": "[parameters('Tags_Environment')]"
           },
           "vNETRef_Hub": {
-            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Hub.value]"
+            "value": "[reference('1_Deploy_vNET_Template', '2020-05-01').outputs.vNETRef_Hub.value]"
           }
         }
       },
@@ -604,7 +604,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "name": "2_Deploy_NVA_PaloAlto_Template",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2019-05-01",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -648,7 +648,7 @@
             "value": "[parameters('Tags_Environment')]"
           },
           "vNETRef_Hub": {
-            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Hub.value]"
+            "value": "[reference('1_Deploy_vNET_Template', '2020-05-01').outputs.vNETRef_Hub.value]"
           }
         }
       },
@@ -661,7 +661,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "name": "3_Deploy_Domain_Template",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2019-05-01",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -726,7 +726,7 @@
             "value": "[variables('Templates')['domain_2_config_bdc'].Link]"
           },
           "vNETRef_Hub": {
-            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Hub.value]"
+            "value": "[reference('1_Deploy_vNET_Template', '2020-05-01').outputs.vNETRef_Hub.value]"
           }
         }
       },
@@ -739,7 +739,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "name": "4_Deploy_DFS_Template",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2019-05-01",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -792,7 +792,7 @@
             "value": "[parameters('Tags_Environment')]"
           },
           "vNETRef_Hub": {
-            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Hub.value]"
+            "value": "[reference('1_Deploy_vNET_Template', '2020-05-01').outputs.vNETRef_Hub.value]"
           }
         }
       },
@@ -805,7 +805,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "name": "5_Deploy_RDS_Template",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2019-05-01",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -870,7 +870,7 @@
             "value": "[parameters('Tags_Environment')]"
           },
           "vNETRef_Hub": {
-            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Hub.value]"
+            "value": "[reference('1_Deploy_vNET_Template', '2020-05-01').outputs.vNETRef_Hub.value]"
           }
         }
       },
@@ -883,7 +883,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "name": "6_Deploy_WORKLOAD_placeholder",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2019-05-01",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -924,7 +924,7 @@
             "value": "[parameters('Tags_Department')]"
           },
           "vNETRef_Spoke": {
-            "value": "[reference('1_Deploy_vNET_Template').outputs.vNETRef_Spoke.value]"
+            "value": "[reference('1_Deploy_vNET_Template', '2020-05-01').outputs.vNETRef_Spoke.value]"
           }
         }
       },
@@ -936,7 +936,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "name": "7_Deploy_ExpressRoute",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2019-05-01",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -971,7 +971,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "name": "7_Deploy_VPN",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2019-05-01",
       "properties": {
         "mode": "Incremental",
         "templateLink": {

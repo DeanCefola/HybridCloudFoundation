@@ -89,7 +89,7 @@
     {
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('vNET_HubInfo')[copyIndex()].vNET_Name]",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2020-05-01",
       "location": "[parameters('location')]",
       "copy": {
         "name": "vNET_HubCopy",
@@ -228,7 +228,7 @@
     {
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('vNET_SpokeInfo')[copyIndex()].vNET_Name]",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2020-05-01",
       "location": "[parameters('location')]",
       "copy": {
         "name": "vNET_SpokeCopy",
@@ -332,7 +332,7 @@
     {
       "type": "Microsoft.Network/routeTables",
       "name": "[concat(parameters('Client_Prefix'), '-UDR-GW')]",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2020-05-01",
       "location": "[parameters('location')]",
       "tags": {
         "Application": "[parameters('Tags_Application')]",
@@ -368,7 +368,7 @@
     {
       "type": "Microsoft.Network/routeTables",
       "name": "[concat(parameters('Client_Prefix'), '-UDR-Azure')]",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2020-05-01",
       "location": "[parameters('location')]",
       "tags": {
         "Application": "[parameters('Tags_Application')]",
@@ -419,7 +419,7 @@
     {
       "type": "Microsoft.Network/routeTables",
       "name": "[concat(parameters('Client_Prefix'), '-UDR-WAF')]",
-      "apiVersion": "2017-08-01",
+      "apiVersion": "2020-05-01",
       "location": "[parameters('location')]",
       "tags": {
         "Application": "[parameters('Tags_Application')]",
@@ -447,7 +447,7 @@
     {
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[concat(parameters('Client_Prefix'), '-Hub00-NSG-NVAMgt')]",
-      "apiVersion": "2017-06-01",
+      "apiVersion": "2020-05-01",
       "location": "[parameters('Location')]",
       "tags": {
         "Application": "[parameters('Tags_Application')]",
@@ -625,7 +625,7 @@
     {
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[concat(parameters('Client_Prefix'), '-Hub00-NSG-identity')]",
-      "apiVersion": "2017-06-01",
+      "apiVersion": "2020-05-01",
       "location": "[parameters('location')]",
       "tags": {
         "Application": "[parameters('Tags_Application')]",
@@ -1147,7 +1147,7 @@
     {
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[concat(parameters('Client_Prefix'), '-Hub00-NSG-SharedServices')]",
-      "apiVersion": "2017-09-01",
+      "apiVersion": "2020-05-01",
       "location": "[parameters('location')]",
       "tags": {
         "Application": "[parameters('Tags_Application')]",
@@ -1332,7 +1332,7 @@
     {
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[concat(parameters('Client_Prefix'), '-Hub00-NSG-Tools')]",
-      "apiVersion": "2017-09-01",
+      "apiVersion": "2020-05-01",
       "location": "[parameters('location')]",
       "tags": {
         "Application": "[parameters('Tags_Application')]",
@@ -1499,7 +1499,7 @@
     {
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[concat(parameters('Client_Prefix'), '-Spoke00-NSG-Web')]",
-      "apiVersion": "2017-09-01",
+      "apiVersion": "2020-05-01",
       "location": "[parameters('location')]",
       "tags": {
         "Application": "[parameters('Tags_Application')]",
@@ -1666,7 +1666,7 @@
     {
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[concat(parameters('Client_Prefix'), '-Spoke00-NSG-App')]",
-      "apiVersion": "2017-09-01",
+      "apiVersion": "2020-05-01",
       "location": "[parameters('location')]",
       "tags": {
         "Application": "[parameters('Tags_Application')]",
@@ -1833,7 +1833,7 @@
     {
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[concat(parameters('Client_Prefix'), '-Spoke00-NSG-Database')]",
-      "apiVersion": "2017-09-01",
+      "apiVersion": "2020-05-01",
       "location": "[parameters('location')]",
       "tags": {
         "Application": "[parameters('Tags_Application')]",
@@ -2000,7 +2000,7 @@
     {
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[concat(parameters('Client_Prefix'), '-Spoke00-NSG-Tools')]",
-      "apiVersion": "2017-09-01",
+      "apiVersion": "2020-05-01",
       "location": "[parameters('location')]",
       "tags": {
         "Application": "[parameters('Tags_Application')]",

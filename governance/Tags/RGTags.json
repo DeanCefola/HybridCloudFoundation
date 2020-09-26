@@ -1,0 +1,32 @@
+﻿{
+  "mode": "all",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Resources/subscriptions/resourceGroups"
+        },
+        {
+          "anyOf": [
+            {
+              "not": {
+                "field": "tags",
+                "containsKey": "costcenter"
+              }
+            },
+            {
+              "not": {
+                "field": "tags",
+                "containsKey": "owner"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "then": {
+      "effect": "deny"
+    }
+  }  
+}

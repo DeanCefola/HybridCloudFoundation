@@ -5,38 +5,41 @@
     "Client_Prefix": {
       "value": "zx9"
     },
+    "IPAddress_Space": {
+      "value": "172.20"
+    },
+    "location": {
+      "value": "eastus"
+    },
+    "Tags_Application": {
+      "value": "SAP"
+    },
+    "Tags_CostCenter": {
+      "value": "AA-Money"
+    },
+    "Tags_Department": {
+      "value": "Identity"
+    },
+    "Tags_Environment": {
+      "value": "dev"
+    },
     "Admin_UserName": {
       "value": "lntad"
     },
     "Auth_authenticationType": {
       "value": "password"
-    },
-    "backupPolicyName": {
-      "value": "PCI"
-    },
+    },    
     "DomainExtension": {
-      "value": ".org"
+      "value": ".com"
     },
     "DomainName": {
-      "value": "AzureAcademy"
+      "value": "MSAA"
     },
-    "IPAddress_Space": {
-      "value": "172.16"
+    "location_DR": {
+      "value": "centralus"
     },
     "SQLAdmin_UserName": {
       "value": "sqladmin"
-    },
-    "Tags_Application": {
-      "value": "WebDemo"
-    },
-    "Tags_CostCenter": {
-      "value": "zx9-money"
-    },
-    "Tags_Department": {
-      "value": "AppDepo"
-    },
-    "Tags_Environment": {
-      "value": "tst"
     },
     "1_Deploy_Backup_Vault": {
       "value": false
@@ -48,7 +51,7 @@
       "value": false
     },
     "1_Deploy_Virtual_Network": {
-      "value": true
+      "value": false
     },
     "2_Deploy_Storage": {
       "value": false
@@ -59,14 +62,11 @@
     "2_Deploy_NVA_PaloAlto": {
       "value": false
     },
-    "3_Deploy_ActiveDirectory": {
-      "value": false
-    },
     "4_Deploy_DFS_Farm": {
       "value": false
     },
     "5_Deploy_RDS_Farm": {
-      "value": true
+      "value": false
     },
     "6_Deploy_Tempalte_WORKLOAD_placeholder": {
       "value": false
@@ -80,19 +80,25 @@
     "Admin_Password": {
       "reference": {
         "keyVault": {
-          "id": "/subscriptions/3a8206a1-e9f3-44a2-84f0-e532b9862258/resourceGroups/zx9-RG-security/providers/Microsoft.KeyVault/vaults/zx9KeyVault"
+          "id": "/subscriptions/17a60df3-f02e-43a2-b52b-11abb3a53049/resourceGroups/WVDQuickstart/providers/Microsoft.KeyVault/vaults/keyvault20200914T034942Z"
         },
-        "secretName": "Built-Local-Admin-Passsword"
+        "secretName": "adminPassword"
       }
     },
     "SQLAdmin_Password": {
       "reference": {
         "keyVault": {
-          "id": "/subscriptions/3a8206a1-e9f3-44a2-84f0-e532b9862258/resourceGroups/zx9-RG-security/providers/Microsoft.KeyVault/vaults/zx9KeyVault"
+          "id": "/subscriptions/17a60df3-f02e-43a2-b52b-11abb3a53049/resourceGroups/WVDQuickstart/providers/Microsoft.KeyVault/vaults/keyvault20200914T034942Z"
         },
-        "secretName": "SQL-Admin-Passsword"
+        "secretName": "azurePassword"
       }
+    },
+    "3_Deploy_ActiveDirectory": {
+      "value": false
+    },
+    "backupPolicyName": {
+      "value": "DefaultPolicy"
     }
-   
+
   }
 }

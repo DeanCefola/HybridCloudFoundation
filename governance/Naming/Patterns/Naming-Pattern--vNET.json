@@ -1,0 +1,101 @@
+﻿{
+  "mode": "all",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Network/virtualNetworks"
+        },
+        {
+          "not": {
+            "allOf": [
+              {
+                "anyOf": [
+                  {
+                    "field": "name",
+                    "match": "AZ-..............."
+                  }
+                ]
+              },
+              {
+                "anyOf": [
+                  {
+                    "field": "name",
+                    "match": "..-EU1-..........."
+                  },
+                  {
+                    "field": "name",
+                    "match": "..-EU2-..........."
+                  },
+                  {
+                    "field": "name",
+                    "match": "..-WU1-..........."
+                  },
+                  {
+                    "field": "name",
+                    "match": "..-WU2-..........."
+                  },
+                  {
+                    "field": "name",
+                    "match": "..-CUS-..........."
+                  },
+                  {
+                    "field": "name",
+                    "match": "..-NCU-..........."
+                  },
+                  {
+                    "field": "name",
+                    "match": "..-SCU-..........."
+                  },
+                  {
+                    "field": "name",
+                    "match": "..-WCU-..........."
+                  }
+                ]
+              },
+              {
+                "anyOf": [
+                  {
+                    "field": "name",
+                    "match": "......-VNET-......"
+                  }
+                ]
+              },
+              {
+                "anyOf": [
+                  {
+                    "field": "name",
+                    "match": "...........-HUB-.."
+                  },
+                  {
+                    "field": "name",
+                    "match": "...........-SP0-.."
+                  },
+                  {
+                    "field": "name",
+                    "match": "...........-SP1-.."
+                  },
+                  {
+                    "field": "name",
+                    "match": "...........-SP2-.."
+                  }
+                ]
+              },
+              {
+                "field": "name",
+                "match": "...............-##"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "then": {
+      "effect": "deny"
+    }
+  },
+  "parameters": {
+
+  }
+}

@@ -1,0 +1,17 @@
+﻿{
+  "mode": "all",
+  "policyRule": {
+    "if": {
+      "anyOf": [
+        {
+          "source": "action",
+          "like": "Microsoft.DocumentDB/databaseAccounts/*"
+        }
+      ]
+    },
+    "then": {
+      "effect": "deny"
+    }
+  },
+  "parameters": {}
+}
