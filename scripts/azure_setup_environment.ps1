@@ -1,5 +1,5 @@
-﻿
-Function New-AzureRMHCFDeployment {
+
+Function New-AzHCFDeployment {
 <# 
  .Synopsis
     Hybrid Cloud Foundation setup Function will deploy 6 Azure Resource Groups
@@ -72,7 +72,7 @@ Function New-AzureRMHCFDeployment {
 
  .Example
  # Create new Azure Deployment
-New-AzureRMDeployment `
+New-AzHCFDeployment `
     -Prefix j99 `
     -Application sap `
     -SourcePath C:\temp\Azure\Deployment `
@@ -139,23 +139,23 @@ Process {
     #             Create Resource Groups                #
     #####################################################
     $RGArray = @(
-      #  ,@("-RG-$Application"; $Location)
-      #  ,@("-RG-identity"; $Location)
+        ,@("-RG-$Application"; $Location)
+        ,@("-RG-identity"; $Location)
         ,@("-RG-security"; $Location)
-      #  ,@("-RG-sharedservices"; $Location)
-      #  ,@("-RG-vnets"; $Location)
-      #  ,@("-RG-DisasterRecovery"; $DR_Location)
+        ,@("-RG-sharedservices"; $Location)
+        ,@("-RG-vnets"; $Location)
+        ,@("-RG-DisasterRecovery"; $DR_Location)
     )
     foreach($RG in $RGArray) {
         $RG_Name = $Prefix + $RG[0]
         $RG_Location = $RG[1]
-        if ((Get-AzureRmResourceGroup -Name $RG_Name -ErrorAction SilentlyContinue) -eq $null) {
+        if ((Get-AzResourceGroup -Name $RG_Name -ErrorAction SilentlyContinue) -eq $null) {
             Write-Host `
                 -ForegroundColor Green `
                 -BackgroundColor Black `
                 "Creating New Azure Resource Group $RG_Name"
             ""
-            New-AzureRmResourceGroup `
+            New-AzResourceGroup `
                 -Name $RG_Name `
                 -Location $RG_Location
             wait-event -Timeout 5
@@ -173,13 +173,13 @@ Process {
     #####################################################
     #              Create Azure Key Vault               #
     #####################################################    
-    if((Get-AzureRmKeyVault -ResourceGroupName $RGSecurity -VaultName $KVName -ErrorAction SilentlyContinue) -eq $null) {
+    if((Get-AzKeyVault -ResourceGroupName $RGSecurity -VaultName $KVName -ErrorAction SilentlyContinue) -eq $null) {
     Write-Host `
         -ForegroundColor Green `
         -BackgroundColor Black `
         "Creating New Azure KeyVault"
     ""
-    New-AzureRmKeyVault `
+    New-AzKeyVault `
         -VaultName $KVName `
         -ResourceGroupName $RGSecurity `
         -Location $Location `
@@ -187,7 +187,7 @@ Process {
         -EnabledForTemplateDeployment `
         -EnabledForDiskEncryption `
         -Sku Premium `
-        -DefaultProfile (Get-AzureRmContext)
+        -DefaultProfile (Get-AzContext)
     wait-event -timeout 5
     ''
     Write-Host `
@@ -195,8 +195,8 @@ Process {
         -BackgroundColor Black `
         "Setting VaultAdmin permissions"
     ""
-    $ID = (Get-AzureRmADUser -UserPrincipalName $KeyVaultAdmin).id.guid
-    Set-AzureRmKeyVaultAccessPolicy `
+    $ID = (Get-AzADUser -UserPrincipalName $KeyVaultAdmin).id
+    Set-AzKeyVaultAccessPolicy `
         -VaultName $KVName  `
         -ResourceGroupName $RGSecurity `
         -ObjectId $ID `
@@ -214,8 +214,8 @@ Process {
             -BackgroundColor Black `
             "Setting VaultAdmin permissions"
         ""
-        $ID = (Get-AzureRmADUser -UserPrincipalName $KeyVaultAdmin).id.guid
-        Set-AzureRmKeyVaultAccessPolicy `
+        $ID = (Get-AzADUser -UserPrincipalName $KeyVaultAdmin).id
+        Set-AzKeyVaultAccessPolicy `
             -VaultName $KVName  `
             -ResourceGroupName $RGSecurity `
             -ObjectId $ID `
@@ -227,13 +227,13 @@ Process {
     #####################################################
     #           Create Azure Key Vault Secrets          #
     #####################################################
-    if ((Get-AzureKeyVaultSecret -VaultName $KVName -Name $SecretName -ErrorAction SilentlyContinue) -eq $null) {
+    if ((Get-AzKeyVaultSecret -VaultName $KVName -Name $SecretName -ErrorAction SilentlyContinue) -eq $null) {
         Write-Host `
             -ForegroundColor Green `
             -BackgroundColor Black `
             "Creating New Local Admin Secret"
         ""
-        Set-AzureKeyVaultSecret `
+        Set-AzKeyVaultSecret `
             -VaultName $KVName `
             -Name $secretName `
             -SecretValue $LocalAdminPassword    
@@ -245,13 +245,13 @@ Process {
             "Local Admin Secret already exists"
         ""
     }
-    if ((Get-AzureKeyVaultSecret -VaultName $KVName -Name $SQLSecretName -ErrorAction SilentlyContinue) -eq $null) {
+    if ((Get-AzKeyVaultSecret -VaultName $KVName -Name $SQLSecretName -ErrorAction SilentlyContinue) -eq $null) {
         Write-Host `
             -ForegroundColor Green `
             -BackgroundColor Black `
             "Creating New SQL Secret"
         ""
-        Set-AzureKeyVaultSecret `
+        Set-AzKeyVaultSecret `
             -VaultName $KVName `
             -Name $SQLsecretName `
             -SecretValue $SQLAdminPassword 
@@ -266,7 +266,7 @@ Process {
     #####################################################
     #    Create Azure AD Application for Encryption     #
     #####################################################    
-    If ((Get-AzureRmADApplication -DisplayNameStartWith $AADDisplayName -ErrorAction SilentlyContinue) -eq $null) {
+    If ((Get-AzADApplication -DisplayNameStartWith $AADDisplayName -ErrorAction SilentlyContinue) -eq $null) {
         Write-Host `
             -ForegroundColor Green `
             -BackgroundColor Black `
@@ -276,17 +276,17 @@ Process {
         -String $AADClientSecret `
         -AsPlainText `
         -Force
-        $AAD_App = New-AzureRmADApplication `
+        $AAD_App = New-AzADApplication `
             -DisplayName $AADDisplayName `
             -HomePage "http://homepage$AADDisplayName" `
             -IdentifierUris "http://$AADDisplayName" `
             -Password $AADSecret            
         $AAD_ID = $AAD_App.ApplicationId.Guid
         ""
-        New-AzureRmADServicePrincipal -ApplicationId $AAD_ID
+        New-AzADServicePrincipal -ApplicationId $AAD_ID
         ""
-        $AAD_SPN = (Get-AzureRmADServicePrincipal -SearchString $AADDisplayName).Id.Guid
-        Set-AzureRmKeyVaultAccessPolicy `
+        $AAD_SPN = (Get-AzADServicePrincipal -SearchString $AADDisplayName).Id.Guid
+        Set-AzKeyVaultAccessPolicy `
             -VaultName $KVName  `
             -ResourceGroupName $RGSecurity `
             -ServicePrincipalName $AAD_ID  `
@@ -299,9 +299,9 @@ Process {
             -BackgroundColor Black `
             "Application already exists"
         ""      
-        $AAD_ID = (Get-AzureRmADApplication -DisplayNameStartWith $AADDisplayName).ApplicationId.Guid
-        $AAD_SPN = (Get-AzureRmADServicePrincipal -SearchString $AADDisplayName).Id.Guid
-        Set-AzureRmKeyVaultAccessPolicy `
+        $AAD_ID = (Get-AzADApplication -DisplayNameStartWith $AADDisplayName).ApplicationId.Guid
+        $AAD_SPN = (Get-AzADServicePrincipal -SearchString $AADDisplayName).Id.Guid
+        Set-AzKeyVaultAccessPolicy `
             -VaultName $KVName  `
             -ResourceGroupName $RGSecurity `
             -ServicePrincipalName $AAD_ID  `
@@ -311,21 +311,21 @@ Process {
     <#####################################################
     #              Create Storage Account               #
     #####################################################
-    if ((Get-AzureRmStorageAccount -ResourceGroupName ($Prefix+"-RG-security") -Name $STName -ErrorAction SilentlyContinue) -eq $null) {
+    if ((Get-AzStorageAccount -ResourceGroupName ($Prefix+"-RG-security") -Name $STName -ErrorAction SilentlyContinue) -eq $null) {
         Write-Host `
             -ForegroundColor Green `
             -BackgroundColor Black `
             "Creating New Storage Account for Artifacts"
         ""
-        New-AzureRmStorageAccount `
+        New-AzStorageAccount `
             -ResourceGroupName ($Prefix+"-RG-security") `
             -Name $STName `
             -SkuName Standard_LRS `
             -Location $Location `
             -Kind StorageV2 `
             -AccessTier Cool
-        $stokey = (Get-AzureRmStorageAccountKey -ResourceGroupName ($Prefix+"-RG-security") -Name $STName).Value[0]    
-        $StorageContext = New-AzureStorageContext `
+        $stokey = (Get-AzStorageAccountKey -ResourceGroupName ($Prefix+"-RG-security") -Name $STName).Value[0]    
+        $StorageContext = New-AzStorageContext `
             -StorageAccountName $STName `
             -StorageAccountKey $stokey  
     }    
@@ -335,22 +335,22 @@ Process {
             -BackgroundColor Black `
             "Artifact Storage Account already exists"
         ""    
-        $stokey = (Get-AzureRmStorageAccountKey -ResourceGroupName ($Prefix+"-RG-security") -Name $STName).Value[0]    
-        $StorageContext = New-AzureStorageContext `
+        $stokey = (Get-AzStorageAccountKey -ResourceGroupName ($Prefix+"-RG-security") -Name $STName).Value[0]    
+        $StorageContext = New-AzStorageContext `
             -StorageAccountName $STName `
             -StorageAccountKey $stokey
     }
     #####################################################
     #              Create Storage Containers            #
     #####################################################
-    if ((Get-AzureStorageContainer -Name 'dsc' -Context $StorageContext -ErrorAction SilentlyContinue) -eq $null) {
+    if ((Get-AzStorageContainer -Name 'dsc' -Context $StorageContext -ErrorAction SilentlyContinue) -eq $null) {
         Write-Host `
             -ForegroundColor Green `
             -BackgroundColor Black `
             "Creating Container for DSC Artifacts"
         ""
         Wait-Event -Timeout 5    
-        New-AzureStorageContainer `
+        New-AzStorageContainer `
             -Context $StorageContext `
             -Name 'dsc' `
             -Permission Container
@@ -362,14 +362,14 @@ Process {
             "DSC Container already exists"
         ""    
     }
-    if ((Get-AzureStorageContainer -Name 'scripts' -Context $StorageContext -ErrorAction SilentlyContinue) -eq $null) {
+    if ((Get-AzStorageContainer -Name 'scripts' -Context $StorageContext -ErrorAction SilentlyContinue) -eq $null) {
         Write-Host `
             -ForegroundColor Green `
             -BackgroundColor Black `
             "Creating Container for Scripts"
         ""
         Wait-Event -Timeout 5    
-        New-AzureStorageContainer `
+        New-AzStorageContainer `
             -Context $StorageContext `
             -Name 'scripts' `
             -Permission Container    
@@ -388,7 +388,7 @@ Process {
     $DSC_Files = (Get-ChildItem -Path $DSCPath).Name   
     foreach ($Scripts in $Scripts_Files) {
         $ConfigPath = "$ScriptsPath$Scripts"
-        Set-AzureStorageBlobContent `
+        Set-AzStorageBlobContent `
             -Blob $Scripts `
             -Container 'scripts' `
             -File $ConfigPath `
@@ -397,7 +397,7 @@ Process {
     }
     foreach ($DSC in $DSC_Files) {
         $ConfigPath = "$DSCPath$dsc"
-        Publish-AzureRmVMDscConfiguration `
+        Publish-AzVMDscConfiguration `
             -ResourceGroupName ($Prefix+"-RG-security") `
             -StorageAccountName $STName `
             -ContainerName 'dsc' `
@@ -417,13 +417,13 @@ End {
 ####################################################
 #               New Azure Deployment               #
 ####################################################
-New-AzureRMHCFDeployment `
+New-AzHCFDeployment `
        -Prefix zx9 `
        -SourcePath 'C:\_VSTS\MSDEAN\HCF\HCF' `
        -Application sap `
-       -Location eastus2 `
-       -DR_Location westus2 `
-       -KeyVaultAdmin deacef@microsoft.com `
+       -Location eastus `
+       -DR_Location westus `
+       -KeyVaultAdmin superman@MSAzureAcademy.com `
        -LocalAdminUser localadmin `
        -SQLAdminUser sqladmin
 
